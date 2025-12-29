@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { DonorTier, AppRole, DONOR_TIER_NICK_CLASSES } from '@/types/database';
+import { RoleBadge } from '@/components/RoleBadge';
 import { cn } from '@/lib/utils';
 
 interface UserNicknameProps {
@@ -10,6 +11,7 @@ interface UserNicknameProps {
   customColor?: string | null;
   className?: string;
   asLink?: boolean;
+  showBadge?: boolean;
 }
 
 export function UserNickname({ 
@@ -19,16 +21,18 @@ export function UserNickname({
   role = 'user',
   customColor,
   className,
-  asLink = true 
+  asLink = true,
+  showBadge = false
 }: UserNicknameProps) {
   // Priority order (highest to lowest):
-  // 1. Admin (red)
-  // 2. Moderator (blue/diamond)
-  // 3. Curator (gold)
-  // 4. Developer (purple)
-  // 5. Player (green with glow)
-  // 6. Donor tiers (sponsor, diamond, gold, silver, bronze) - only if no special role
-  // 7. User (default green)
+  // 1. Admin (red) - staff
+  // 2. Moderator (blue) - staff
+  // 3. Curator (gold) - staff
+  // 4. Developer (purple) - staff
+  // 5. Player with donor tier
+  // 6. Player (green)
+  // 7. User with donor tier
+  // 8. User (default green)
   
   let nickClass = '';
   
@@ -41,26 +45,19 @@ export function UserNickname({
     nickClass = 'role-curator';
   } else if (role === 'developer') {
     nickClass = 'role-developer';
+  } else if (donorTier !== 'none') {
+    // Has donor tier - use donor colors
+    nickClass = DONOR_TIER_NICK_CLASSES[donorTier];
   } else if (role === 'player') {
-    // Player role with donor tier overlay
-    if (donorTier !== 'none') {
-      nickClass = DONOR_TIER_NICK_CLASSES[donorTier];
-    } else {
-      nickClass = 'role-player';
-    }
+    nickClass = 'role-player';
   } else {
-    // Regular user - check for donor tier
-    if (donorTier !== 'none') {
-      nickClass = DONOR_TIER_NICK_CLASSES[donorTier];
-    } else {
-      // Default green for regular users
-      nickClass = 'text-primary';
-    }
+    // Default green for regular users
+    nickClass = 'text-primary';
   }
   
   const style = customColor ? { color: customColor, textShadow: `0 0 10px ${customColor}` } : undefined;
 
-  const content = (
+  const nicknameElement = (
     <span 
       className={cn(
         'font-semibold transition-colors',
@@ -74,11 +71,18 @@ export function UserNickname({
     </span>
   );
 
-  if (!asLink) return content;
-
-  return (
-    <Link to={`/user/${userId}`}>
-      {content}
-    </Link>
+  const content = (
+    <span className="inline-flex items-center gap-1.5 flex-wrap">
+      {asLink ? (
+        <Link to={`/user/${userId}`}>
+          {nicknameElement}
+        </Link>
+      ) : (
+        nicknameElement
+      )}
+      {showBadge && <RoleBadge role={role} donorTier={donorTier} />}
+    </span>
   );
+
+  return content;
 }

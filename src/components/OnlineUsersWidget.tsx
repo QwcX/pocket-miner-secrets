@@ -216,6 +216,7 @@ export function OnlineUsersWidget() {
                           donorTier={activity.donor_tier}
                           customColor={activity.nickname_color}
                           className="text-sm font-medium"
+                          showBadge
                         />
                         <span className="text-muted-foreground">:</span>
                       </div>
