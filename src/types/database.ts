@@ -1,4 +1,5 @@
-export type ContentType = 'plugin' | 'mod' | 'map' | 'resourcepack';
+export type ContentType = 'plugin' | 'mod' | 'map' | 'resourcepack' | 'build' | 'config';
+export type AppRole = 'admin' | 'moderator' | 'user' | 'developer' | 'player' | 'curator';
 
 export interface Profile {
   id: string;
@@ -19,6 +20,7 @@ export interface Project {
   minecraft_versions: string[];
   tags: string[];
   thumbnail_url: string | null;
+  download_url: string | null;
   is_premium: boolean;
   price: number;
   downloads_count: number;
@@ -72,6 +74,8 @@ export const CONTENT_TYPE_LABELS: Record<ContentType, string> = {
   mod: 'Мод',
   map: 'Карта',
   resourcepack: 'Ресурспак',
+  build: 'Сборка',
+  config: 'Конфиг',
 };
 
 export const CONTENT_TYPE_COLORS: Record<ContentType, string> = {
@@ -79,4 +83,24 @@ export const CONTENT_TYPE_COLORS: Record<ContentType, string> = {
   mod: 'bg-minecraft-purple text-accent-foreground',
   map: 'bg-minecraft-gold text-background',
   resourcepack: 'bg-minecraft-diamond text-background',
+  build: 'bg-minecraft-red text-primary-foreground',
+  config: 'bg-minecraft-gray text-primary-foreground',
+};
+
+export const ROLE_LABELS: Record<AppRole, string> = {
+  admin: 'Администратор',
+  moderator: 'Модератор',
+  user: 'Пользователь',
+  developer: 'Разработчик',
+  player: 'Игрок',
+  curator: 'Куратор',
+};
+
+export const ROLE_COLORS: Record<AppRole, string> = {
+  admin: 'bg-destructive text-destructive-foreground',
+  moderator: 'bg-minecraft-purple text-primary-foreground',
+  user: 'bg-muted text-muted-foreground',
+  developer: 'bg-minecraft-green text-primary-foreground',
+  player: 'bg-minecraft-diamond text-background',
+  curator: 'bg-minecraft-gold text-background',
 };

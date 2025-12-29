@@ -2,6 +2,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/lib/auth';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   Search, 
   Upload, 
@@ -13,6 +15,9 @@ import {
   Puzzle,
   Map,
   Palette,
+  Package,
+  Settings,
+  Shield,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -29,6 +34,8 @@ const categories = [
   { name: 'Моды', href: '/browse?type=mod', icon: Blocks },
   { name: 'Карты', href: '/browse?type=map', icon: Map },
   { name: 'Ресурспаки', href: '/browse?type=resourcepack', icon: Palette },
+  { name: 'Сборки', href: '/browse?type=build', icon: Package },
+  { name: 'Конфиги', href: '/browse?type=config', icon: Settings },
 ];
 
 export function Header() {
@@ -36,6 +43,25 @@ export function Header() {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Check if user is moderator or admin
+  const { data: userRoles } = useQuery({
+    queryKey: ['userRoles', user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .in('role', ['admin', 'moderator', 'curator']);
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  const hasModeratorAccess = userRoles && userRoles.length > 0;
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -114,6 +140,12 @@ export function Header() {
                     <Blocks className="w-4 h-4 mr-2" />
                     Мои проекты
                   </DropdownMenuItem>
+                  {hasModeratorAccess && (
+                    <DropdownMenuItem onClick={() => navigate('/moderation')}>
+                      <Shield className="w-4 h-4 mr-2" />
+                      Модерация
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={signOut}>
                     <LogOut className="w-4 h-4 mr-2" />
