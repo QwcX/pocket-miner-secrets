@@ -1,11 +1,16 @@
 export type ContentType = 'plugin' | 'mod' | 'map' | 'resourcepack' | 'build' | 'config';
 export type AppRole = 'admin' | 'moderator' | 'user' | 'developer' | 'player' | 'curator';
+export type DonorTier = 'none' | 'bronze' | 'silver' | 'gold' | 'diamond' | 'sponsor';
 
 export interface Profile {
   id: string;
   username: string;
   avatar_url: string | null;
+  banner_url: string | null;
   bio: string | null;
+  discord_username: string | null;
+  telegram_username: string | null;
+  last_seen_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -69,6 +74,34 @@ export interface Favorite {
   created_at: string;
 }
 
+export interface UserReputation {
+  id: string;
+  user_id: string;
+  points: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UserDonor {
+  id: string;
+  user_id: string;
+  tier: DonorTier;
+  nickname_color: string | null;
+  expires_at: string | null;
+  created_at: string;
+}
+
+export interface ModerationLog {
+  id: string;
+  moderator_id: string;
+  project_id: string | null;
+  action: string;
+  reason: string | null;
+  project_title: string | null;
+  created_at: string;
+  profiles?: Profile;
+}
+
 export const CONTENT_TYPE_LABELS: Record<ContentType, string> = {
   plugin: 'Плагин',
   mod: 'Мод',
@@ -103,4 +136,31 @@ export const ROLE_COLORS: Record<AppRole, string> = {
   developer: 'bg-minecraft-green text-primary-foreground',
   player: 'bg-minecraft-diamond text-background',
   curator: 'bg-minecraft-gold text-background',
+};
+
+export const DONOR_TIER_LABELS: Record<DonorTier, string> = {
+  none: 'Обычный',
+  bronze: 'Bronze',
+  silver: 'Silver',
+  gold: 'Gold',
+  diamond: 'Diamond',
+  sponsor: 'Sponsor',
+};
+
+export const DONOR_TIER_COLORS: Record<DonorTier, string> = {
+  none: '',
+  bronze: 'bg-donor-bronze text-background',
+  silver: 'bg-donor-silver text-background',
+  gold: 'bg-donor-gold text-background',
+  diamond: 'bg-donor-diamond text-background',
+  sponsor: 'bg-donor-sponsor text-background',
+};
+
+export const DONOR_TIER_NICK_CLASSES: Record<DonorTier, string> = {
+  none: '',
+  bronze: 'donor-bronze',
+  silver: 'donor-silver',
+  gold: 'donor-gold',
+  diamond: 'donor-diamond',
+  sponsor: 'donor-sponsor',
 };

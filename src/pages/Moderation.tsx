@@ -102,6 +102,14 @@ export default function Moderation() {
       
       if (error) throw error;
 
+      // Log the action
+      await supabase.from('moderation_logs').insert({
+        moderator_id: user!.id,
+        project_id: project.id,
+        action: 'approve',
+        project_title: project.title,
+      });
+
       // Send notification to project author
       await supabase.from('notifications').insert({
         user_id: project.author_id,
@@ -131,7 +139,16 @@ export default function Moderation() {
   // Reject mutation (delete project)
   const rejectMutation = useMutation({
     mutationFn: async ({ project, reason }: { project: Project; reason: string }) => {
-      // First send notification before deleting
+      // Log the action first
+      await supabase.from('moderation_logs').insert({
+        moderator_id: user!.id,
+        project_id: project.id,
+        action: 'reject',
+        reason: reason || null,
+        project_title: project.title,
+      });
+
+      // Send notification before deleting
       await supabase.from('notifications').insert({
         user_id: project.author_id,
         type: 'project_rejected',

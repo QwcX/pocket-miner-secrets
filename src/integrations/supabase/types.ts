@@ -88,6 +88,44 @@ export type Database = {
           },
         ]
       }
+      moderation_logs: {
+        Row: {
+          action: string
+          created_at: string | null
+          id: string
+          moderator_id: string
+          project_id: string | null
+          project_title: string | null
+          reason: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          id?: string
+          moderator_id: string
+          project_id?: string | null
+          project_title?: string | null
+          reason?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          id?: string
+          moderator_id?: string
+          project_id?: string | null
+          project_title?: string | null
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "moderation_logs_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           created_at: string
@@ -296,6 +334,84 @@ export type Database = {
           },
         ]
       }
+      reputation_history: {
+        Row: {
+          created_at: string | null
+          given_by: string | null
+          id: string
+          points_change: number
+          reason: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          given_by?: string | null
+          id?: string
+          points_change: number
+          reason: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          given_by?: string | null
+          id?: string
+          points_change?: number
+          reason?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_donors: {
+        Row: {
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          nickname_color: string | null
+          tier: Database["public"]["Enums"]["donor_tier"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          nickname_color?: string | null
+          tier?: Database["public"]["Enums"]["donor_tier"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          nickname_color?: string | null
+          tier?: Database["public"]["Enums"]["donor_tier"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_reputation: {
+        Row: {
+          created_at: string | null
+          id: string
+          points: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          points?: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          points?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
@@ -324,6 +440,11 @@ export type Database = {
         Args: { project_uuid: string }
         Returns: number
       }
+      get_user_donor_tier: {
+        Args: { user_uuid: string }
+        Returns: Database["public"]["Enums"]["donor_tier"]
+      }
+      get_user_reputation: { Args: { user_uuid: string }; Returns: number }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -347,6 +468,7 @@ export type Database = {
         | "resourcepack"
         | "build"
         | "config"
+      donor_tier: "none" | "bronze" | "silver" | "gold" | "diamond" | "sponsor"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -483,6 +605,7 @@ export const Constants = {
         "curator",
       ],
       content_type: ["plugin", "mod", "map", "resourcepack", "build", "config"],
+      donor_tier: ["none", "bronze", "silver", "gold", "diamond", "sponsor"],
     },
   },
 } as const

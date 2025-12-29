@@ -15,6 +15,8 @@ import MyProjects from "./pages/MyProjects";
 import Profile from "./pages/Profile";
 import UserProfile from "./pages/UserProfile";
 import Moderation from "./pages/Moderation";
+import ModerationLogs from "./pages/ModerationLogs";
+import Leaderboards from "./pages/Leaderboards";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
@@ -39,6 +41,8 @@ const App = () => (
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/user/:userId" element={<UserProfile />} />
                 <Route path="/moderation" element={<Moderation />} />
+                <Route path="/moderation/logs" element={<ModerationLogs />} />
+                <Route path="/leaderboards" element={<Leaderboards />} />
                 <Route path="/admin" element={<Admin />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
