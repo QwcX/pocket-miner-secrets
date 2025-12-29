@@ -79,7 +79,7 @@ export function Header() {
             <Blocks className="w-5 h-5 text-primary-foreground" />
           </div>
           <span className="font-display text-xs md:text-sm text-primary">
-            MCLeak
+            TestLeak
           </span>
         </Link>
 

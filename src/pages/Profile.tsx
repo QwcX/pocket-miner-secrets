@@ -131,7 +131,7 @@ export default function Profile() {
   return (
     <>
       <Helmet>
-        <title>Профиль | MCLeak</title>
+        <title>Профиль | TestLeak</title>
       </Helmet>
 
       <Layout>

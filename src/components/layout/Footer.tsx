@@ -12,11 +12,11 @@ export function Footer() {
               <div className="w-8 h-8 bg-primary rounded flex items-center justify-center">
                 <Blocks className="w-5 h-5 text-primary-foreground" />
               </div>
-              <span className="font-display text-xs text-primary">MCLeak</span>
+              <span className="font-display text-xs text-primary">TestLeak</span>
             </Link>
             <p className="text-sm text-muted-foreground">
               Крупнейшая платформа для обмена Minecraft контентом. 
-              Делитесь своими плагинами, модами, картами и ресурспаками.
+              Делитесь своими сборками, плагинами, модами, картами и ресурспаками.
             </p>
           </div>
 
@@ -96,7 +96,7 @@ export function Footer() {
 
         <div className="mt-8 pt-8 border-t border-border">
           <p className="text-center text-sm text-muted-foreground">
-            © {new Date().getFullYear()} MCLeak. Все права защищены.
+            © {new Date().getFullYear()} TestLeak. Все права защищены.
           </p>
         </div>
       </div>

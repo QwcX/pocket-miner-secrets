@@ -13,12 +13,19 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { 
   Download, Star, Eye, Calendar, User, Heart, HeartOff, Crown,
-  MessageSquare, History, ArrowLeft, Send, Loader2,
+  MessageSquare, History, ArrowLeft, Send, Loader2, LogIn,
 } from 'lucide-react';
 import { CONTENT_TYPE_LABELS, CONTENT_TYPE_COLORS, ProjectVersion, Comment, Profile } from '@/types/database';
 import { cn } from '@/lib/utils';
 import { Helmet } from 'react-helmet-async';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 export default function Project() {
   const { slug } = useParams<{ slug: string }>();
@@ -26,6 +33,9 @@ export default function Project() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  const [showAuthDialog, setShowAuthDialog] = useState(false);
+  const [authAction, setAuthAction] = useState('');
 
   const { data: project, isLoading } = useProject(slug || '');
 
@@ -96,7 +106,6 @@ export default function Project() {
         .order('created_at', { ascending: false });
       if (error) throw error;
       
-      // Fetch profiles for comments
       const userIds = [...new Set((data || []).map(c => c.user_id))];
       const { data: profiles } = await supabase
         .from('profiles')
@@ -112,6 +121,15 @@ export default function Project() {
     },
     enabled: !!project?.id,
   });
+
+  const requireAuth = (action: string) => {
+    if (!user) {
+      setAuthAction(action);
+      setShowAuthDialog(true);
+      return false;
+    }
+    return true;
+  };
 
   const rateMutation = useMutation({
     mutationFn: async (ratingValue: number) => {
@@ -171,7 +189,28 @@ export default function Project() {
 
   const formatNumber = (num: number) => num >= 1000 ? `${(num / 1000).toFixed(1)}K` : num.toString();
   const formatDate = (date: string) => new Date(date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
-  const formatFileSize = (bytes: number) => bytes >= 1024 * 1024 ? `${(bytes / (1024 * 1024)).toFixed(1)} MB` : `${(bytes / 1024).toFixed(1)} KB`;
+
+  const handleDownload = (url: string) => {
+    if (!requireAuth('скачать проект')) return;
+    window.open(url, '_blank');
+  };
+
+  const handleRate = (value: number) => {
+    if (!requireAuth('оценить проект')) return;
+    rateMutation.mutate(value);
+  };
+
+  const handleFavorite = () => {
+    if (!requireAuth('добавить в избранное')) return;
+    favoriteMutation.mutate();
+  };
+
+  const handleComment = () => {
+    if (!requireAuth('оставить комментарий')) return;
+    if (commentText.trim()) {
+      commentMutation.mutate();
+    }
+  };
 
   if (isLoading) return <Layout><div className="container py-8"><Skeleton className="h-64 w-full" /></div></Layout>;
   if (!project) return <Layout><div className="container py-16 text-center"><h1 className="text-2xl font-semibold mb-4">Проект не найден</h1><Button onClick={() => navigate('/browse')}><ArrowLeft className="w-4 h-4 mr-2" />Вернуться</Button></div></Layout>;
@@ -180,7 +219,7 @@ export default function Project() {
 
   return (
     <>
-      <Helmet><title>{project.title} | MCLeak</title></Helmet>
+      <Helmet><title>{project.title} | TestLeak</title></Helmet>
       <Layout>
         <div className="container py-8">
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
@@ -193,7 +232,7 @@ export default function Project() {
             <div className="lg:col-span-2 space-y-6">
               <div className="flex flex-col sm:flex-row gap-6">
                 <div className="w-full sm:w-48 h-48 rounded-lg overflow-hidden bg-secondary">
-                  {project.thumbnail_url ? <img src={project.thumbnail_url} alt={project.title} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><span className="font-display text-3xl text-muted-foreground opacity-50">MC</span></div>}
+                  {project.thumbnail_url ? <img src={project.thumbnail_url} alt={project.title} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><span className="font-display text-3xl text-muted-foreground opacity-50">TL</span></div>}
                 </div>
                 <div className="flex-1 space-y-3">
                   <div className="flex flex-wrap items-center gap-2">
@@ -224,26 +263,83 @@ export default function Project() {
                   {versions.map(v => (
                     <Card key={v.id} className="bg-card border-border"><CardContent className="pt-6 flex justify-between items-start">
                       <div><h3 className="font-semibold">v{v.version_number}</h3><p className="text-sm text-muted-foreground">{formatDate(v.created_at)}</p></div>
-                      <Button asChild size="sm"><a href={v.file_url} target="_blank"><Download className="w-4 h-4 mr-1" />Скачать</a></Button>
+                      <Button size="sm" onClick={() => handleDownload(v.file_url)}><Download className="w-4 h-4 mr-1" />Скачать</Button>
                     </CardContent></Card>
                   ))}
                 </TabsContent>
                 <TabsContent value="comments" className="mt-4 space-y-4">
-                  {user && <Card className="bg-card border-border"><CardContent className="pt-6"><Textarea placeholder="Комментарий..." value={commentText} onChange={e => setCommentText(e.target.value)} className="mb-3" /><Button onClick={() => commentMutation.mutate()} disabled={!commentText.trim()}><Send className="w-4 h-4 mr-1" />Отправить</Button></CardContent></Card>}
+                  <Card className="bg-card border-border">
+                    <CardContent className="pt-6">
+                      <Textarea 
+                        placeholder={user ? "Комментарий..." : "Войдите чтобы оставить комментарий"} 
+                        value={commentText} 
+                        onChange={e => setCommentText(e.target.value)} 
+                        className="mb-3" 
+                        disabled={!user}
+                      />
+                      <Button onClick={handleComment} disabled={!commentText.trim()}>
+                        <Send className="w-4 h-4 mr-1" />Отправить
+                      </Button>
+                    </CardContent>
+                  </Card>
                   {comments.map(c => <Card key={c.id} className="bg-card border-border"><CardContent className="pt-6"><div className="flex items-start gap-3"><div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center"><User className="w-5 h-5" /></div><div><span className="font-medium">{c.profiles?.username}</span><p className="mt-1">{c.content}</p></div></div></CardContent></Card>)}
                 </TabsContent>
               </Tabs>
             </div>
 
-            <div><Card className="bg-card border-border sticky top-24"><CardHeader><CardTitle className="text-lg">Скачать</CardTitle></CardHeader><CardContent className="space-y-4">
-              {latestVersion ? <Button asChild className="w-full bg-primary" size="lg"><a href={latestVersion.file_url} target="_blank"><Download className="w-4 h-4 mr-2" />Скачать v{latestVersion.version_number}</a></Button> : <p className="text-sm text-muted-foreground text-center">Нет файлов</p>}
-              {user && <div className="pt-4 border-t border-border space-y-3">
-                <div><p className="text-sm font-medium text-muted-foreground mb-2">Оценка</p><div className="flex gap-1">{[1,2,3,4,5].map(v => <button key={v} onClick={() => rateMutation.mutate(v)}><Star className={cn("w-6 h-6", (userRating||0) >= v ? "fill-minecraft-gold text-minecraft-gold" : "text-muted-foreground")} /></button>)}</div></div>
-                <Button variant="outline" className="w-full" onClick={() => favoriteMutation.mutate()}>{isFavorite ? <><HeartOff className="w-4 h-4 mr-2" />Убрать</> : <><Heart className="w-4 h-4 mr-2" />В избранное</>}</Button>
-              </div>}
-            </CardContent></Card></div>
+            <div>
+              <Card className="bg-card border-border sticky top-24">
+                <CardHeader><CardTitle className="text-lg">Скачать</CardTitle></CardHeader>
+                <CardContent className="space-y-4">
+                  {latestVersion ? (
+                    <Button className="w-full bg-primary" size="lg" onClick={() => handleDownload(latestVersion.file_url)}>
+                      <Download className="w-4 h-4 mr-2" />Скачать v{latestVersion.version_number}
+                    </Button>
+                  ) : (
+                    <p className="text-sm text-muted-foreground text-center">Нет файлов</p>
+                  )}
+                  
+                  <div className="pt-4 border-t border-border space-y-3">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground mb-2">Оценка</p>
+                      <div className="flex gap-1">
+                        {[1,2,3,4,5].map(v => (
+                          <button key={v} onClick={() => handleRate(v)}>
+                            <Star className={cn("w-6 h-6", (userRating||0) >= v ? "fill-minecraft-gold text-minecraft-gold" : "text-muted-foreground")} />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <Button variant="outline" className="w-full" onClick={handleFavorite}>
+                      {isFavorite ? <><HeartOff className="w-4 h-4 mr-2" />Убрать</> : <><Heart className="w-4 h-4 mr-2" />В избранное</>}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
+
+        {/* Auth Dialog */}
+        <Dialog open={showAuthDialog} onOpenChange={setShowAuthDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Требуется авторизация</DialogTitle>
+              <DialogDescription>
+                Чтобы {authAction}, необходимо войти в аккаунт или зарегистрироваться
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex gap-3 mt-4">
+              <Button className="flex-1" onClick={() => navigate('/auth')}>
+                <LogIn className="w-4 h-4 mr-2" />
+                Войти
+              </Button>
+              <Button variant="outline" className="flex-1" onClick={() => navigate('/auth?mode=signup')}>
+                Регистрация
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </Layout>
     </>
   );
