@@ -14,6 +14,7 @@ import { UserNickname } from '@/components/UserNickname';
 import { useToast } from '@/hooks/use-toast';
 import { useNotificationSound } from '@/hooks/useNotificationSound';
 import { Helmet } from 'react-helmet-async';
+import { EmojiPicker } from '@/components/EmojiPicker';
 import { 
   MessageSquare, 
   Send, 
@@ -408,12 +409,15 @@ export default function Messages() {
 
                   {/* Input */}
                   <div className="p-4 border-t border-border/50 flex-shrink-0">
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 items-end">
+                      <EmojiPicker 
+                        onEmojiSelect={(emoji) => setMessageText(prev => prev + emoji)}
+                      />
                       <Textarea
                         placeholder="Введите сообщение..."
                         value={messageText}
                         onChange={e => setMessageText(e.target.value)}
-                        className="resize-none"
+                        className="resize-none flex-1"
                         rows={1}
                         onKeyDown={e => {
                           if (e.key === 'Enter' && !e.shiftKey) {
