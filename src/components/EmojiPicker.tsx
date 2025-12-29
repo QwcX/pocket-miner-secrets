@@ -19,40 +19,39 @@ type EmojiItem = ImageEmoji | TextEmoji;
 
 const isImageEmoji = (item: EmojiItem): item is ImageEmoji => 'url' in item;
 
-// Pepe pack from SigStick (stored locally in public/assets/emoji)
+// SigStick Pepe pack (24 stickers)
 const SIGSTICK_PEPE: ImageEmoji[] = Array.from({ length: 24 }, (_, i) => ({
-  code: `:pepe_sig_${i}:`,
+  code: `:pepe${i}:`,
   url: `/assets/emoji/pepe-sigstick/${i}.webp`,
-  alt: `Pepe sticker ${i}`,
+  alt: `Pepe ${i}`,
 }));
 
-// Pepe category from emoji.gg (stored locally in public/assets/emoji)
+// emoji.gg Pepe (25 emojis - locally stored)
 const EMOJI_GG_PEPE: ImageEmoji[] = [
-  { code: ':reversa:', url: '/assets/emoji/pepe-emoji-gg/reversa.gif', alt: 'reversa' },
-  { code: ':yay:', url: '/assets/emoji/pepe-emoji-gg/yay.gif', alt: 'yay' },
-  { code: ':uu:', url: '/assets/emoji/pepe-emoji-gg/uu.png', alt: 'uu' },
-  { code: ':noconexion:', url: '/assets/emoji/pepe-emoji-gg/noconexion.png', alt: 'noconexion' },
-  { code: ':soga:', url: '/assets/emoji/pepe-emoji-gg/soga.png', alt: 'soga' },
-  { code: ':bed:', url: '/assets/emoji/pepe-emoji-gg/bed.gif', alt: 'bed' },
-  { code: ':jsjs:', url: '/assets/emoji/pepe-emoji-gg/jsjs.gif', alt: 'jsjs' },
-  { code: ':noob:', url: '/assets/emoji/pepe-emoji-gg/noob.gif', alt: 'noob' },
-  { code: ':whatttt:', url: '/assets/emoji/pepe-emoji-gg/whatttt.png', alt: 'whatttt' },
-  { code: ':toxic:', url: '/assets/emoji/pepe-emoji-gg/toxic.gif', alt: 'toxic' },
-  { code: ':peepopurple:', url: '/assets/emoji/pepe-emoji-gg/peepopurple.png', alt: 'peepopurple' },
-  { code: ':sleepypepe:', url: '/assets/emoji/pepe-emoji-gg/sleepypepe.png', alt: 'sleepypepe' },
-  { code: ':s4ic1d4:', url: '/assets/emoji/pepe-emoji-gg/s4ic1d4.png', alt: 's4ic1d4' },
-  { code: ':pepelooking:', url: '/assets/emoji/pepe-emoji-gg/pepelooking.png', alt: 'pepelooking' },
-  { code: ':owol:', url: '/assets/emoji/pepe-emoji-gg/owol.png', alt: 'owol' },
-  { code: ':life:', url: '/assets/emoji/pepe-emoji-gg/life.png', alt: 'life' },
-  { code: ':ok:', url: '/assets/emoji/pepe-emoji-gg/ok.png', alt: 'ok' },
-  { code: ':peepopog:', url: '/assets/emoji/pepe-emoji-gg/peepopog.gif', alt: 'peepopog' },
-  { code: ':pepelmao:', url: '/assets/emoji/pepe-emoji-gg/pepelmao.gif', alt: 'pepelmao' },
-  { code: ':pepesmoking:', url: '/assets/emoji/pepe-emoji-gg/pepesmoking.gif', alt: 'pepesmoking' },
-  { code: ':spedpepe:', url: '/assets/emoji/pepe-emoji-gg/spedpepe.png', alt: 'spedpepe' },
-  { code: ':delusional:', url: '/assets/emoji/pepe-emoji-gg/delusional.png', alt: 'delusional' },
-  { code: ':swepepeviking:', url: '/assets/emoji/pepe-emoji-gg/swepepeviking.png', alt: 'swepepeviking' },
-  { code: ':stephblush:', url: '/assets/emoji/pepe-emoji-gg/stephblush.png', alt: 'stephblush' },
-  { code: ':pepeflower:', url: '/assets/emoji/pepe-emoji-gg/pepeflower.gif', alt: 'pepeflower' },
+  { code: ':reversa:', url: '/assets/emoji/pepe-emoji-gg/reversa.gif', alt: 'Reversa' },
+  { code: ':yay:', url: '/assets/emoji/pepe-emoji-gg/yay.gif', alt: 'Yay' },
+  { code: ':uu:', url: '/assets/emoji/pepe-emoji-gg/uu.png', alt: 'UU' },
+  { code: ':noconexion:', url: '/assets/emoji/pepe-emoji-gg/noconexion.png', alt: 'No Conexion' },
+  { code: ':soga:', url: '/assets/emoji/pepe-emoji-gg/soga.png', alt: 'Soga' },
+  { code: ':bed:', url: '/assets/emoji/pepe-emoji-gg/bed.gif', alt: 'Bed' },
+  { code: ':jsjs:', url: '/assets/emoji/pepe-emoji-gg/jsjs.gif', alt: 'JSJS' },
+  { code: ':noob:', url: '/assets/emoji/pepe-emoji-gg/noob.gif', alt: 'Noob' },
+  { code: ':whatttt:', url: '/assets/emoji/pepe-emoji-gg/whatttt.png', alt: 'Whatttt' },
+  { code: ':toxic:', url: '/assets/emoji/pepe-emoji-gg/toxic.gif', alt: 'Toxic' },
+  { code: ':peepopurple:', url: '/assets/emoji/pepe-emoji-gg/peepopurple.png', alt: 'Peepo Purple' },
+  { code: ':sleepypepe:', url: '/assets/emoji/pepe-emoji-gg/sleepypepe.png', alt: 'Sleepy Pepe' },
+  { code: ':pepelooking:', url: '/assets/emoji/pepe-emoji-gg/pepelooking.png', alt: 'Pepe Looking' },
+  { code: ':owol:', url: '/assets/emoji/pepe-emoji-gg/owol.png', alt: 'OwOl' },
+  { code: ':life:', url: '/assets/emoji/pepe-emoji-gg/life.png', alt: 'Life' },
+  { code: ':ok:', url: '/assets/emoji/pepe-emoji-gg/ok.png', alt: 'OK' },
+  { code: ':peepopog:', url: '/assets/emoji/pepe-emoji-gg/peepopog.gif', alt: 'Peepo Pog' },
+  { code: ':pepelmao:', url: '/assets/emoji/pepe-emoji-gg/pepelmao.gif', alt: 'Pepe LMAO' },
+  { code: ':pepesmoking:', url: '/assets/emoji/pepe-emoji-gg/pepesmoking.gif', alt: 'Pepe Smoking' },
+  { code: ':spedpepe:', url: '/assets/emoji/pepe-emoji-gg/spedpepe.png', alt: 'Sped Pepe' },
+  { code: ':delusional:', url: '/assets/emoji/pepe-emoji-gg/delusional.png', alt: 'Delusional' },
+  { code: ':swepepeviking:', url: '/assets/emoji/pepe-emoji-gg/swepepeviking.png', alt: 'Pepe Viking' },
+  { code: ':stephblush:', url: '/assets/emoji/pepe-emoji-gg/stephblush.png', alt: 'Blush' },
+  { code: ':pepeflower:', url: '/assets/emoji/pepe-emoji-gg/pepeflower.gif', alt: 'Pepe Flower' },
 ];
 
 const REACTION_EMOJIS: TextEmoji[] = [
@@ -63,14 +62,19 @@ const REACTION_EMOJIS: TextEmoji[] = [
   { code: ':100:', emoji: '💯' },
   { code: ':clap:', emoji: '👏' },
   { code: ':eyes:', emoji: '👀' },
+  { code: ':skull:', emoji: '💀' },
   { code: ':joy:', emoji: '😂' },
   { code: ':sob:', emoji: '😭' },
   { code: ':angry:', emoji: '😠' },
   { code: ':thinking:', emoji: '🤔' },
   { code: ':sunglasses:', emoji: '😎' },
+  { code: ':party:', emoji: '🥳' },
   { code: ':ok_hand:', emoji: '👌' },
   { code: ':pray:', emoji: '🙏' },
   { code: ':muscle:', emoji: '💪' },
+  { code: ':star:', emoji: '⭐' },
+  { code: ':rocket:', emoji: '🚀' },
+  { code: ':crown:', emoji: '👑' },
 ];
 
 const GAMING_EMOJIS: TextEmoji[] = [
@@ -88,18 +92,23 @@ const GAMING_EMOJIS: TextEmoji[] = [
   { code: ':dice:', emoji: '🎲' },
   { code: ':joystick:', emoji: '🕹️' },
   { code: ':rocket:', emoji: '🚀' },
-  { code: ':crown:', emoji: '👑' },
+  { code: ':alien:', emoji: '👾' },
+  { code: ':zombie:', emoji: '🧟' },
+  { code: ':bow:', emoji: '🏹' },
+  { code: ':bomb:', emoji: '💣' },
+  { code: ':gem:', emoji: '💎' },
+  { code: ':sparkles:', emoji: '✨' },
 ];
 
 const EMOJI_CATEGORIES = {
   sigstick: {
-    name: 'Pepe (SigStick)',
+    name: 'Pepe SigStick',
     icon: '🐸',
     emojis: SIGSTICK_PEPE as EmojiItem[],
   },
   pepe: {
-    name: 'Pepe (emoji.gg)',
-    icon: '🟩',
+    name: 'Pepe Memes',
+    icon: '🟢',
     emojis: EMOJI_GG_PEPE as EmojiItem[],
   },
   reactions: {
@@ -153,21 +162,21 @@ export function EmojiPicker({ onEmojiSelect, className }: EmojiPickerProps) {
         variant="ghost"
         size="icon"
         onClick={() => setIsOpen(v => !v)}
-        className="h-10 w-10 text-xl hover:bg-secondary"
-        aria-label="Открыть панель эмодзи"
+        className="h-10 w-10 text-xl hover:bg-secondary flex-shrink-0"
+        aria-label="Эмодзи"
       >
-        😎
+        🐸
       </Button>
 
       {isOpen && (
-        <div className="absolute bottom-12 right-0 z-50 w-[22rem] sm:w-96 rounded-lg border border-border bg-background shadow-xl animate-in fade-in-0 zoom-in-95">
+        <div className="absolute bottom-12 right-0 z-50 w-72 sm:w-80 md:w-96 rounded-lg border border-border bg-background shadow-xl animate-in fade-in-0 zoom-in-95">
           <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as EmojiCategoryKey)} className="w-full">
             <TabsList className="w-full grid grid-cols-4 h-10 bg-secondary/50 rounded-t-lg rounded-b-none">
               {Object.entries(EMOJI_CATEGORIES).map(([key, category]) => (
                 <TabsTrigger
                   key={key}
                   value={key}
-                  className="text-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                  className="text-base sm:text-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
                   title={category.name}
                 >
                   {category.icon}
@@ -177,25 +186,29 @@ export function EmojiPicker({ onEmojiSelect, className }: EmojiPickerProps) {
 
             {Object.entries(EMOJI_CATEGORIES).map(([key, category]) => (
               <TabsContent key={key} value={key} className="m-0">
-                <ScrollArea className="h-72">
-                  <div className="grid grid-cols-5 gap-1 p-2">
+                <ScrollArea className="h-64 sm:h-72">
+                  <div className="grid grid-cols-4 sm:grid-cols-5 gap-1 p-2">
                     {category.emojis.map((item) => (
                       <button
                         key={item.code}
                         type="button"
                         onClick={() => handleEmojiClick(item)}
-                        className="flex items-center justify-center h-14 w-14 rounded-md hover:bg-secondary transition-colors"
+                        className="flex items-center justify-center h-12 w-12 sm:h-14 sm:w-14 rounded-md hover:bg-secondary/80 transition-colors active:scale-95"
                         title={item.code}
                       >
                         {isImageEmoji(item) ? (
                           <img
                             src={item.url}
                             alt={item.alt}
-                            className="w-12 h-12 object-contain"
+                            className="w-10 h-10 sm:w-12 sm:h-12 object-contain"
                             loading="lazy"
+                            onError={(e) => {
+                              // Hide broken images
+                              (e.target as HTMLImageElement).style.display = 'none';
+                            }}
                           />
                         ) : (
-                          <span className="text-3xl">{item.emoji}</span>
+                          <span className="text-2xl sm:text-3xl">{item.emoji}</span>
                         )}
                       </button>
                     ))}
