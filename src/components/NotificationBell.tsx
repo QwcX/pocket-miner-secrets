@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth';
@@ -16,6 +16,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useNotificationSound } from '@/hooks/useNotificationSound';
 
 interface Notification {
   id: string;
@@ -32,6 +33,8 @@ export function NotificationBell() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
+  const { playMessageSound, playModerationSound } = useNotificationSound();
+  const prevNotificationCountRef = useRef(0);
 
   const { data: notifications = [], isLoading } = useQuery({
     queryKey: ['notifications', user?.id],
@@ -50,6 +53,86 @@ export function NotificationBell() {
     enabled: !!user,
     refetchInterval: 30000, // Refresh every 30 seconds
   });
+
+  // Check for user roles
+  const { data: userRoles } = useQuery({
+    queryKey: ['userRoles', user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+      const { data } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id);
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  const isModerator = userRoles?.some(r => 
+    r.role === 'admin' || r.role === 'moderator' || r.role === 'curator'
+  );
+
+  // Play sound when new notifications arrive
+  useEffect(() => {
+    const unreadCount = notifications.filter(n => !n.is_read).length;
+    
+    if (unreadCount > prevNotificationCountRef.current && prevNotificationCountRef.current > 0) {
+      // New unread notification appeared
+      const latestUnread = notifications.find(n => !n.is_read);
+      
+      if (latestUnread) {
+        // Moderation-related notifications get special sound
+        if (isModerator && (
+          latestUnread.type === 'new_project' ||
+          latestUnread.type === 'project_pending' ||
+          latestUnread.type === 'report'
+        )) {
+          playModerationSound();
+        } else {
+          playMessageSound();
+        }
+      }
+    }
+    
+    prevNotificationCountRef.current = unreadCount;
+  }, [notifications, isModerator, playMessageSound, playModerationSound]);
+
+  // Realtime subscription for instant notification sounds
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('notifications-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          queryClient.invalidateQueries({ queryKey: ['notifications', user.id] });
+          
+          // Play sound based on notification type
+          const notification = payload.new as Notification;
+          if (isModerator && (
+            notification.type === 'new_project' ||
+            notification.type === 'project_pending' ||
+            notification.type === 'report'
+          )) {
+            playModerationSound();
+          } else {
+            playMessageSound();
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, queryClient, isModerator, playMessageSound, playModerationSound]);
 
   const unreadCount = notifications.filter(n => !n.is_read).length;
 
@@ -116,6 +199,11 @@ export function NotificationBell() {
         return '⭐';
       case 'role_changed':
         return '👑';
+      case 'new_message':
+        return '✉️';
+      case 'new_project':
+      case 'project_pending':
+        return '📦';
       default:
         return '📢';
     }
