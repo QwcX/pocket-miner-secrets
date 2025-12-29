@@ -170,6 +170,32 @@
     background-size: 200% auto;
   }
 
+  /* Role nickname colors */
+  .role-admin {
+    color: hsl(var(--destructive));
+    text-shadow: 0 0 10px hsl(var(--destructive) / 0.5);
+  }
+
+  .role-moderator {
+    color: hsl(var(--minecraft-diamond));
+    text-shadow: 0 0 10px hsl(var(--minecraft-diamond) / 0.5);
+  }
+
+  .role-developer {
+    color: hsl(var(--minecraft-purple));
+    text-shadow: 0 0 10px hsl(var(--minecraft-purple) / 0.5);
+  }
+
+  .role-player {
+    color: hsl(var(--primary));
+    text-shadow: 0 0 10px hsl(var(--primary) / 0.5);
+  }
+
+  .role-curator {
+    color: hsl(var(--minecraft-gold));
+    text-shadow: 0 0 10px hsl(var(--minecraft-gold) / 0.5);
+  }
+
   @keyframes gradient-shift {
     0%, 100% { background-position: 0% center; }
     50% { background-position: 100% center; }

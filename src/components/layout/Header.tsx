@@ -39,6 +39,7 @@ const categories = [
   { name: 'Ресурспаки', href: '/browse?type=resourcepack', icon: Palette },
   { name: 'Сборки', href: '/browse?type=build', icon: Package },
   { name: 'Конфиги', href: '/browse?type=config', icon: Settings },
+  { name: 'Топы', href: '/leaderboards', icon: Crown },
 ];
 
 export function Header() {
