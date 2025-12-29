@@ -61,6 +61,31 @@ const checkForSpam = async (content: string): Promise<boolean> => {
   return blockedWords.some(bw => lowerContent.includes(bw.word.toLowerCase()));
 };
 
+// Component to render message content with emoji support
+const MessageContent = ({ content }: { content: string }) => {
+  // Parse content for [emoji:url] patterns
+  const parts = content.split(/(\[emoji:[^\]]+\])/g);
+  
+  return (
+    <p className="break-words">
+      {parts.map((part, index) => {
+        const emojiMatch = part.match(/\[emoji:([^\]]+)\]/);
+        if (emojiMatch) {
+          return (
+            <img
+              key={index}
+              src={emojiMatch[1]}
+              alt="emoji"
+              className="inline-block w-6 h-6 align-middle mx-0.5"
+            />
+          );
+        }
+        return <span key={index}>{part}</span>;
+      })}
+    </p>
+  );
+};
+
 export default function Messages() {
   const { recipientId } = useParams();
   const navigate = useNavigate();
@@ -392,7 +417,7 @@ export default function Messages() {
                                   : 'bg-secondary'
                               }`}
                             >
-                              <p className="break-words">{msg.content}</p>
+                              <MessageContent content={msg.content} />
                               <p className="text-xs opacity-70 mt-1">
                                 {formatDistanceToNow(new Date(msg.created_at), {
                                   addSuffix: true,
@@ -411,7 +436,14 @@ export default function Messages() {
                   <div className="p-4 border-t border-border/50 flex-shrink-0">
                     <div className="flex gap-2 items-end">
                       <EmojiPicker 
-                        onEmojiSelect={(emoji) => setMessageText(prev => prev + emoji)}
+                        onEmojiSelect={(emoji, isImage, imageUrl) => {
+                          if (isImage && imageUrl) {
+                            // Insert image emoji as special markup
+                            setMessageText(prev => prev + `[emoji:${imageUrl}]`);
+                          } else {
+                            setMessageText(prev => prev + emoji);
+                          }
+                        }}
                       />
                       <Textarea
                         placeholder="Введите сообщение..."
