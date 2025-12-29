@@ -24,17 +24,20 @@ import {
   Loader2,
   ArrowLeft,
   Image,
-  FileArchive,
+  Link as LinkIcon,
+  AlertCircle,
 } from 'lucide-react';
 import { ContentType, CONTENT_TYPE_LABELS } from '@/types/database';
 import { Helmet } from 'react-helmet-async';
 import { z } from 'zod';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const uploadSchema = z.object({
   title: z.string().min(3, 'Минимум 3 символа').max(100, 'Максимум 100 символов'),
   description: z.string().min(20, 'Минимум 20 символов').max(5000, 'Максимум 5000 символов'),
-  content_type: z.enum(['plugin', 'mod', 'map', 'resourcepack']),
+  content_type: z.enum(['plugin', 'mod', 'map', 'resourcepack', 'build', 'config']),
   version_number: z.string().min(1, 'Укажите версию'),
+  download_url: z.string().url('Введите корректную ссылку').min(1, 'Укажите ссылку на скачивание'),
 });
 
 const MINECRAFT_VERSIONS = [
@@ -58,13 +61,13 @@ export default function Upload() {
     description: '',
     content_type: '' as ContentType | '',
     version_number: '1.0.0',
+    download_url: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [selectedVersions, setSelectedVersions] = useState<string[]>([]);
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
-  const [projectFile, setProjectFile] = useState<File | null>(null);
 
   // Redirect if not authenticated
   if (!authLoading && !user) {
@@ -117,21 +120,11 @@ export default function Upload() {
       return;
     }
 
-    if (!projectFile) {
-      toast({
-        title: 'Ошибка',
-        description: 'Выберите файл проекта',
-        variant: 'destructive',
-      });
-      return;
-    }
-
     setLoading(true);
 
     try {
       const slug = generateSlug(formData.title);
       let thumbnailUrl = null;
-      let fileUrl = '';
 
       // Upload thumbnail
       if (thumbnailFile) {
@@ -149,21 +142,7 @@ export default function Upload() {
         thumbnailUrl = publicUrl;
       }
 
-      // Upload project file
-      const filePath = `${user!.id}/${slug}/${formData.version_number}/${projectFile.name}`;
-      const { error: fileError } = await supabase.storage
-        .from('project-files')
-        .upload(filePath, projectFile);
-
-      if (fileError) throw fileError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('project-files')
-        .getPublicUrl(filePath);
-
-      fileUrl = publicUrl;
-
-      // Create project
+      // Create project - is_approved = false (goes to moderation)
       const { data: project, error: projectError } = await supabase
         .from('projects')
         .insert({
@@ -175,7 +154,8 @@ export default function Upload() {
           minecraft_versions: selectedVersions,
           tags,
           thumbnail_url: thumbnailUrl,
-          is_approved: true, // Auto-approve for now
+          download_url: formData.download_url,
+          is_approved: false, // Goes to moderation
         })
         .select()
         .single();
@@ -188,19 +168,19 @@ export default function Upload() {
         .insert({
           project_id: project.id,
           version_number: formData.version_number,
-          file_url: fileUrl,
-          file_size: projectFile.size,
+          file_url: formData.download_url,
+          file_size: 0,
           minecraft_versions: selectedVersions,
         });
 
       if (versionError) throw versionError;
 
       toast({
-        title: 'Успешно!',
-        description: 'Проект загружен',
+        title: 'Отправлено на модерацию!',
+        description: 'Ваш проект будет проверен модераторами',
       });
 
-      navigate(`/project/${slug}`);
+      navigate('/my-projects');
     } catch (error: any) {
       console.error('Upload error:', error);
       toast({
@@ -245,6 +225,13 @@ export default function Upload() {
             </CardHeader>
 
             <CardContent>
+              <Alert className="mb-6 bg-minecraft-gold/10 border-minecraft-gold">
+                <AlertCircle className="h-4 w-4 text-minecraft-gold" />
+                <AlertDescription className="text-minecraft-gold">
+                  Все проекты проходят проверку модераторами перед публикацией
+                </AlertDescription>
+              </Alert>
+
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Title */}
                 <div className="space-y-2">
@@ -405,46 +392,25 @@ export default function Upload() {
                   )}
                 </div>
 
-                {/* Project File */}
+                {/* Download URL */}
                 <div className="space-y-2">
-                  <Label>Файл проекта *</Label>
-                  <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
-                    {projectFile ? (
-                      <div className="flex items-center justify-center gap-4">
-                        <FileArchive className="w-8 h-8 text-primary" />
-                        <div className="text-left">
-                          <p className="text-sm font-medium">{projectFile.name}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {(projectFile.size / (1024 * 1024)).toFixed(2)} MB
-                          </p>
-                        </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setProjectFile(null)}
-                        >
-                          <X className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    ) : (
-                      <label className="cursor-pointer">
-                        <UploadIcon className="w-12 h-12 mx-auto text-muted-foreground mb-2" />
-                        <p className="text-sm text-muted-foreground">
-                          Нажмите для выбора файла
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          JAR, ZIP до 50MB
-                        </p>
-                        <input
-                          type="file"
-                          accept=".jar,.zip,.rar,.7z"
-                          className="hidden"
-                          onChange={(e) => setProjectFile(e.target.files?.[0] || null)}
-                        />
-                      </label>
-                    )}
+                  <Label htmlFor="download_url">Ссылка на скачивание *</Label>
+                  <div className="relative">
+                    <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      id="download_url"
+                      placeholder="https://drive.google.com/... или https://workupload.com/..."
+                      value={formData.download_url}
+                      onChange={(e) => setFormData({ ...formData, download_url: e.target.value })}
+                      className={`pl-10 ${errors.download_url ? 'border-destructive' : ''}`}
+                    />
                   </div>
+                  <p className="text-xs text-muted-foreground">
+                    Поддерживаются: Google Drive, Yandex Disk, WorkUpload, MediaFire и др.
+                  </p>
+                  {errors.download_url && (
+                    <p className="text-xs text-destructive">{errors.download_url}</p>
+                  )}
                 </div>
 
                 <Button
@@ -455,7 +421,7 @@ export default function Upload() {
                 >
                   {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                   <UploadIcon className="w-4 h-4 mr-2" />
-                  Загрузить проект
+                  Отправить на модерацию
                 </Button>
               </form>
             </CardContent>

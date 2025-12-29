@@ -165,6 +165,7 @@ export type Database = {
           content_type: Database["public"]["Enums"]["content_type"]
           created_at: string | null
           description: string
+          download_url: string | null
           downloads_count: number | null
           id: string
           is_approved: boolean | null
@@ -183,6 +184,7 @@ export type Database = {
           content_type: Database["public"]["Enums"]["content_type"]
           created_at?: string | null
           description: string
+          download_url?: string | null
           downloads_count?: number | null
           id?: string
           is_approved?: boolean | null
@@ -201,6 +203,7 @@ export type Database = {
           content_type?: Database["public"]["Enums"]["content_type"]
           created_at?: string | null
           description?: string
+          download_url?: string | null
           downloads_count?: number | null
           id?: string
           is_approved?: boolean | null
@@ -285,8 +288,20 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "moderator" | "user"
-      content_type: "plugin" | "mod" | "map" | "resourcepack"
+      app_role:
+        | "admin"
+        | "moderator"
+        | "user"
+        | "developer"
+        | "player"
+        | "curator"
+      content_type:
+        | "plugin"
+        | "mod"
+        | "map"
+        | "resourcepack"
+        | "build"
+        | "config"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -414,8 +429,15 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "moderator", "user"],
-      content_type: ["plugin", "mod", "map", "resourcepack"],
+      app_role: [
+        "admin",
+        "moderator",
+        "user",
+        "developer",
+        "player",
+        "curator",
+      ],
+      content_type: ["plugin", "mod", "map", "resourcepack", "build", "config"],
     },
   },
 } as const

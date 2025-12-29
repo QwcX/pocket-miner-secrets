@@ -12,6 +12,7 @@ import Project from "./pages/Project";
 import Upload from "./pages/Upload";
 import MyProjects from "./pages/MyProjects";
 import Profile from "./pages/Profile";
+import Moderation from "./pages/Moderation";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +33,7 @@ const App = () => (
               <Route path="/upload" element={<Upload />} />
               <Route path="/my-projects" element={<MyProjects />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/moderation" element={<Moderation />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
