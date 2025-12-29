@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      blocked_words: {
+        Row: {
+          created_at: string
+          id: string
+          word: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          word: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          word?: string
+        }
+        Relationships: []
+      }
       comments: {
         Row: {
           content: string
@@ -156,6 +174,120 @@ export type Database = {
           title?: string
           type?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      online_users: {
+        Row: {
+          id: string
+          last_ping: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          last_ping?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          last_ping?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      private_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_read: boolean
+          receiver_id: string
+          sender_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          receiver_id: string
+          sender_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          receiver_id?: string
+          sender_id?: string
+        }
+        Relationships: []
+      }
+      profile_ratings: {
+        Row: {
+          created_at: string
+          id: string
+          is_positive: boolean
+          profile_id: string
+          rater_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_positive: boolean
+          profile_id: string
+          rater_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_positive?: boolean
+          profile_id?: string
+          rater_id?: string
+        }
+        Relationships: []
+      }
+      profile_subscriptions: {
+        Row: {
+          created_at: string
+          follower_id: string
+          following_id: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          follower_id: string
+          following_id: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          follower_id?: string
+          following_id?: string
+          id?: string
+        }
+        Relationships: []
+      }
+      profile_wall_posts: {
+        Row: {
+          author_id: string
+          content: string
+          created_at: string
+          id: string
+          profile_id: string
+        }
+        Insert: {
+          author_id: string
+          content: string
+          created_at?: string
+          id?: string
+          profile_id: string
+        }
+        Update: {
+          author_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          profile_id?: string
         }
         Relationships: []
       }
