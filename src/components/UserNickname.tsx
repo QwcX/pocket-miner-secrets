@@ -21,14 +21,27 @@ export function UserNickname({
   className,
   asLink = true 
 }: UserNicknameProps) {
-  // Priority: custom color > role (for admin/mod) > donor tier
-  const roleClass = ROLE_NICK_CLASSES[role];
-  const donorClass = DONOR_TIER_NICK_CLASSES[donorTier];
+  // Priority: custom color > role (for admin/mod/dev/curator) > donor tier > default green
+  let nickClass = '';
   
-  // Admin/moderator roles take priority, otherwise use donor tier
-  const nickClass = (role === 'admin' || role === 'moderator' || role === 'curator' || role === 'developer') 
-    ? roleClass 
-    : (donorTier !== 'none' ? donorClass : roleClass);
+  // Special roles always get their colors
+  if (role === 'admin') {
+    nickClass = 'role-admin';
+  } else if (role === 'moderator') {
+    nickClass = 'role-moderator';
+  } else if (role === 'curator') {
+    nickClass = 'role-curator';
+  } else if (role === 'developer') {
+    nickClass = 'role-developer';
+  } else if (donorTier !== 'none') {
+    // Donor tiers
+    nickClass = DONOR_TIER_NICK_CLASSES[donorTier];
+  } else if (role === 'player') {
+    nickClass = 'role-player';
+  } else {
+    // Default for regular users - green color
+    nickClass = 'text-primary';
+  }
   
   const style = customColor ? { color: customColor, textShadow: `0 0 10px ${customColor}` } : undefined;
 
