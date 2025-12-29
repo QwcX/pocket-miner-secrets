@@ -4,6 +4,7 @@ import { useProjects, useProjectRatings } from '@/hooks/useProjects';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
+import { OnlineUsersWidget } from '@/components/OnlineUsersWidget';
 import { 
   ArrowRight, 
   Blocks, 
@@ -125,27 +126,37 @@ const Index = () => {
           </div>
         </section>
 
-        {/* Categories */}
+        {/* Categories + Activity Widget */}
         <section className="py-12 bg-card/50">
           <div className="container">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {categories.map((category) => (
-                <Link
-                  key={category.name}
-                  to={category.href}
-                  className="group p-6 rounded-xl bg-card border border-border hover:border-primary/50 transition-all duration-300 card-hover"
-                >
-                  <div className={`w-12 h-12 rounded-lg flex items-center justify-center mb-4 border ${category.color}`}>
-                    <category.icon className="w-6 h-6" />
-                  </div>
-                  <h3 className="font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
-                    {category.name}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    {category.description}
-                  </p>
-                </Link>
-              ))}
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+              {/* Categories */}
+              <div className="lg:col-span-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {categories.map((category) => (
+                    <Link
+                      key={category.name}
+                      to={category.href}
+                      className="group p-6 rounded-xl bg-card border border-border hover:border-primary/50 transition-all duration-300 card-hover"
+                    >
+                      <div className={`w-12 h-12 rounded-lg flex items-center justify-center mb-4 border ${category.color}`}>
+                        <category.icon className="w-6 h-6" />
+                      </div>
+                      <h3 className="font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
+                        {category.name}
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        {category.description}
+                      </p>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Activity Widget */}
+              <div className="lg:col-span-1">
+                <OnlineUsersWidget />
+              </div>
             </div>
           </div>
         </section>
