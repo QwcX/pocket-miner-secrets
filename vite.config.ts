@@ -14,5 +14,7 @@ export default defineConfig(({ mode }) => ({
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
+    // Prevent duplicate React instances (fixes "Cannot read properties of null (reading 'useState')")
+    dedupe: ["react", "react-dom"],
   },
 }));
