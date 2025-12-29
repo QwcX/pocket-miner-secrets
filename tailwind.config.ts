@@ -64,6 +64,7 @@ export default {
           diamond: "hsl(var(--minecraft-diamond))",
           purple: "hsl(var(--minecraft-purple))",
           red: "hsl(var(--minecraft-red))",
+          gray: "hsl(var(--minecraft-gray))",
         },
       },
       fontFamily: {
