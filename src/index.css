@@ -119,6 +119,53 @@
   .pixelated {
     image-rendering: pixelated;
   }
+
+  /* Glass morphism styles */
+  .glass-card {
+    @apply bg-card/80 backdrop-blur-xl border border-border/50 shadow-xl;
+  }
+
+  .glass-button {
+    @apply bg-secondary/50 backdrop-blur-sm border border-border/30 hover:bg-secondary/70 transition-all;
+  }
+
+  .glass-input {
+    @apply bg-secondary/50 backdrop-blur-sm border-border/50;
+  }
+}
+
+/* Theme: Glass iOS */
+.theme-glass {
+  --background: 240 15% 8%;
+  --card: 240 15% 12%;
+  --border: 240 10% 25%;
+  --primary: 280 80% 60%;
+  --accent: 200 90% 60%;
+}
+
+.theme-glass .glass-card {
+  background: linear-gradient(135deg, hsl(var(--card) / 0.6), hsl(var(--card) / 0.3));
+  backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid hsl(var(--border) / 0.3);
+  box-shadow: 0 8px 32px hsl(var(--primary) / 0.1), inset 0 1px 0 hsl(255 100% 100% / 0.05);
+}
+
+/* Theme: Midnight */
+.theme-midnight {
+  --background: 230 30% 8%;
+  --card: 230 25% 12%;
+  --primary: 220 90% 60%;
+  --accent: 280 70% 55%;
+  --border: 230 20% 20%;
+}
+
+/* Theme: Forest */
+.theme-forest {
+  --background: 150 20% 8%;
+  --card: 150 18% 12%;
+  --primary: 142 70% 45%;
+  --accent: 80 60% 50%;
+  --border: 150 15% 20%;
 }
 
 /* Custom scrollbar */

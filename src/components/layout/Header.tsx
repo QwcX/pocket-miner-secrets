@@ -18,6 +18,7 @@ import {
   Package,
   Settings,
   Shield,
+  Crown,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -28,6 +29,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
+import { NotificationBell } from '@/components/NotificationBell';
+import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 
 const categories = [
   { name: 'Плагины', href: '/browse?type=plugin', icon: Puzzle },
@@ -61,7 +64,8 @@ export function Header() {
     enabled: !!user,
   });
 
-  const hasModeratorAccess = userRoles && userRoles.length > 0;
+  const hasModeratorAccess = userRoles?.some(r => r.role === 'moderator' || r.role === 'curator');
+  const isAdmin = userRoles?.some(r => r.role === 'admin');
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,7 +75,7 @@ export function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b border-border/50 glass-card">
       <div className="container flex h-16 items-center justify-between">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2">
@@ -113,13 +117,17 @@ export function Header() {
 
         {/* Actions */}
         <div className="flex items-center gap-2">
+          <ThemeSwitcher />
+          
           {user ? (
             <>
+              <NotificationBell />
+              
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => navigate('/upload')}
-                className="hidden sm:flex items-center gap-2"
+                className="hidden sm:flex items-center gap-2 glass-button"
               >
                 <Upload className="w-4 h-4" />
                 <span className="hidden md:inline">Загрузить</span>
@@ -127,11 +135,11 @@ export function Header() {
               
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon">
+                  <Button variant="ghost" size="icon" className="glass-button">
                     <User className="w-5 h-5" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuContent align="end" className="w-48 glass-card">
                   <DropdownMenuItem onClick={() => navigate('/profile')}>
                     <User className="w-4 h-4 mr-2" />
                     Профиль
@@ -144,6 +152,12 @@ export function Header() {
                     <DropdownMenuItem onClick={() => navigate('/moderation')}>
                       <Shield className="w-4 h-4 mr-2" />
                       Модерация
+                    </DropdownMenuItem>
+                  )}
+                  {isAdmin && (
+                    <DropdownMenuItem onClick={() => navigate('/admin')}>
+                      <Crown className="w-4 h-4 mr-2" />
+                      Админ-панель
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuSeparator />
