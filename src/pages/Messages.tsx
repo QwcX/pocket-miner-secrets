@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { UserNickname } from '@/components/UserNickname';
 import { useToast } from '@/hooks/use-toast';
+import { useNotificationSound } from '@/hooks/useNotificationSound';
 import { Helmet } from 'react-helmet-async';
 import { 
   MessageSquare, 
@@ -64,10 +65,12 @@ export default function Messages() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { playMessageSound } = useNotificationSound();
   const queryClient = useQueryClient();
   const [messageText, setMessageText] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const prevMessagesLengthRef = useRef(0);
 
   // Fetch conversations
   const { data: conversations = [], isLoading: loadingConversations } = useQuery({
@@ -213,7 +216,7 @@ export default function Messages() {
     },
   });
 
-  // Realtime subscription
+  // Realtime subscription with sound
   useEffect(() => {
     if (!user) return;
 
@@ -228,6 +231,7 @@ export default function Messages() {
           filter: `receiver_id=eq.${user.id}`,
         },
         () => {
+          playMessageSound();
           queryClient.invalidateQueries({ queryKey: ['messages'] });
           queryClient.invalidateQueries({ queryKey: ['conversations'] });
         }
@@ -237,12 +241,20 @@ export default function Messages() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, queryClient]);
+  }, [user, queryClient, playMessageSound]);
 
   // Scroll to bottom on new messages
   useEffect(() => {
+    if (messages.length > prevMessagesLengthRef.current && prevMessagesLengthRef.current > 0) {
+      // New message received
+      const lastMsg = messages[messages.length - 1];
+      if (lastMsg && lastMsg.sender_id !== user?.id) {
+        playMessageSound();
+      }
+    }
+    prevMessagesLengthRef.current = messages.length;
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  }, [messages, user?.id, playMessageSound]);
 
   if (!user) {
     navigate('/auth');

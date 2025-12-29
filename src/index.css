@@ -200,6 +200,20 @@
     0%, 100% { background-position: 0% center; }
     50% { background-position: 100% center; }
   }
+
+  /* Snowfall animation */
+  .animate-snowfall {
+    animation: snowfall linear infinite;
+  }
+
+  @keyframes snowfall {
+    0% {
+      transform: translateY(-10vh) rotate(0deg);
+    }
+    100% {
+      transform: translateY(110vh) rotate(360deg);
+    }
+  }
 }
 
 /* Custom scrollbar */

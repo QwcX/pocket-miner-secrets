@@ -19,6 +19,7 @@ import {
   Settings,
   Shield,
   Crown,
+  MessageSquare,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -31,6 +32,8 @@ import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { NotificationBell } from '@/components/NotificationBell';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
+import { SnowflakeToggle } from '@/components/SnowflakeToggle';
+import { useSnowflakes } from '@/components/Snowflakes';
 
 const categories = [
   { name: 'Плагины', href: '/browse?type=plugin', icon: Puzzle },
@@ -42,7 +45,12 @@ const categories = [
   { name: 'Топы', href: '/leaderboards', icon: Crown },
 ];
 
-export function Header() {
+interface HeaderProps {
+  snowflakesEnabled?: boolean;
+  onToggleSnowflakes?: () => void;
+}
+
+export function Header({ snowflakesEnabled = true, onToggleSnowflakes }: HeaderProps) {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -118,11 +126,23 @@ export function Header() {
 
         {/* Actions */}
         <div className="flex items-center gap-2">
+          {onToggleSnowflakes && (
+            <SnowflakeToggle enabled={snowflakesEnabled} onToggle={onToggleSnowflakes} />
+          )}
           <ThemeSwitcher />
           
           {user ? (
             <>
               <NotificationBell />
+              
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate('/messages')}
+                className="glass-button"
+              >
+                <MessageSquare className="w-5 h-5" />
+              </Button>
               
               <Button
                 variant="ghost"
