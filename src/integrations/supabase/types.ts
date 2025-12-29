@@ -88,28 +88,73 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean
+          link: string | null
+          message: string
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          link?: string | null
+          message: string
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          link?: string | null
+          message?: string
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
+          banner_url: string | null
           bio: string | null
           created_at: string | null
+          discord_username: string | null
           id: string
+          last_seen_at: string | null
+          telegram_username: string | null
           updated_at: string | null
           username: string
         }
         Insert: {
           avatar_url?: string | null
+          banner_url?: string | null
           bio?: string | null
           created_at?: string | null
+          discord_username?: string | null
           id: string
+          last_seen_at?: string | null
+          telegram_username?: string | null
           updated_at?: string | null
           username: string
         }
         Update: {
           avatar_url?: string | null
+          banner_url?: string | null
           bio?: string | null
           created_at?: string | null
+          discord_username?: string | null
           id?: string
+          last_seen_at?: string | null
+          telegram_username?: string | null
           updated_at?: string | null
           username?: string
         }

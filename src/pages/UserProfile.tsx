@@ -1,0 +1,330 @@
+import { useParams, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { Layout } from '@/components/layout/Layout';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Helmet } from 'react-helmet-async';
+import { 
+  User, 
+  Loader2, 
+  Calendar, 
+  Clock, 
+  Package, 
+  MessageSquare, 
+  Star,
+  Heart,
+  Crown,
+  ShieldCheck,
+  Code,
+  Gamepad2,
+  BookMarked,
+  ExternalLink,
+} from 'lucide-react';
+import { formatDistanceToNow, format } from 'date-fns';
+import { ru } from 'date-fns/locale';
+import { ROLE_LABELS, ROLE_COLORS, AppRole, CONTENT_TYPE_LABELS, CONTENT_TYPE_COLORS } from '@/types/database';
+import { ProjectCard } from '@/components/projects/ProjectCard';
+
+const ROLE_ICONS: Record<AppRole, typeof Crown> = {
+  admin: Crown,
+  moderator: ShieldCheck,
+  user: User,
+  developer: Code,
+  player: Gamepad2,
+  curator: BookMarked,
+};
+
+const DISCORD_ICON = () => (
+  <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor">
+    <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+  </svg>
+);
+
+const TELEGRAM_ICON = () => (
+  <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor">
+    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 0 0-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/>
+  </svg>
+);
+
+export default function UserProfile() {
+  const { userId } = useParams();
+  const navigate = useNavigate();
+
+  // Fetch user profile
+  const { data: profile, isLoading: profileLoading } = useQuery({
+    queryKey: ['userProfile', userId],
+    queryFn: async () => {
+      if (!userId) return null;
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!userId,
+  });
+
+  // Fetch user roles
+  const { data: roles = [] } = useQuery({
+    queryKey: ['userProfileRoles', userId],
+    queryFn: async () => {
+      if (!userId) return [];
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId);
+      if (error) throw error;
+      return data.map(r => r.role as AppRole);
+    },
+    enabled: !!userId,
+  });
+
+  // Fetch user projects
+  const { data: projects = [] } = useQuery({
+    queryKey: ['userProfileProjects', userId],
+    queryFn: async () => {
+      if (!userId) return [];
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('author_id', userId)
+        .eq('is_approved', true)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!userId,
+  });
+
+  // Fetch user stats
+  const { data: stats } = useQuery({
+    queryKey: ['userProfileStats', userId],
+    queryFn: async () => {
+      if (!userId) return { comments: 0, ratings: 0, favorites: 0 };
+      
+      const [comments, ratings, favorites] = await Promise.all([
+        supabase.from('comments').select('id', { count: 'exact' }).eq('user_id', userId),
+        supabase.from('ratings').select('id', { count: 'exact' }).eq('user_id', userId),
+        supabase.from('favorites').select('id', { count: 'exact' }).eq('user_id', userId),
+      ]);
+
+      return {
+        comments: comments.count || 0,
+        ratings: ratings.count || 0,
+        favorites: favorites.count || 0,
+      };
+    },
+    enabled: !!userId,
+  });
+
+  if (profileLoading) {
+    return (
+      <Layout>
+        <div className="container py-16 flex justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </Layout>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <Layout>
+        <div className="container py-16 text-center">
+          <User className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+          <h2 className="text-xl font-bold mb-2">Пользователь не найден</h2>
+          <Button onClick={() => navigate('/')}>На главную</Button>
+        </div>
+      </Layout>
+    );
+  }
+
+  const totalDownloads = projects.reduce((sum, p) => sum + (p.downloads_count || 0), 0);
+  const primaryRole = roles.find(r => r === 'admin') || roles.find(r => r === 'moderator') || roles[0];
+
+  return (
+    <>
+      <Helmet>
+        <title>{profile.username} | TestLeak</title>
+      </Helmet>
+
+      <Layout>
+        <div className="container py-8 max-w-6xl">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Left sidebar - Profile card */}
+            <div className="space-y-4">
+              <Card className="glass-card overflow-hidden">
+                {/* Avatar section */}
+                <div className="p-6 text-center">
+                  <Avatar className="w-32 h-32 mx-auto border-4 border-primary/30 shadow-lg shadow-primary/20">
+                    <AvatarImage src={profile.avatar_url || undefined} />
+                    <AvatarFallback className="bg-secondary text-4xl">
+                      {profile.username?.charAt(0).toUpperCase() || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                  
+                  <h1 className="text-xl font-bold mt-4 text-foreground">{profile.username}</h1>
+                  
+                  {/* Roles */}
+                  <div className="flex flex-wrap justify-center gap-2 mt-3">
+                    {roles.map((role) => {
+                      const Icon = ROLE_ICONS[role];
+                      return (
+                        <Badge key={role} className={`${ROLE_COLORS[role]} gap-1`}>
+                          <Icon className="w-3 h-3" />
+                          {ROLE_LABELS[role]}
+                        </Badge>
+                      );
+                    })}
+                  </div>
+
+                  {profile.bio && (
+                    <p className="mt-4 text-sm text-muted-foreground">{profile.bio}</p>
+                  )}
+                </div>
+
+                {/* Social links */}
+                {(profile.discord_username || profile.telegram_username) && (
+                  <div className="border-t border-border/50 p-4 space-y-2">
+                    {profile.discord_username && (
+                      <div className="flex items-center gap-3 text-sm">
+                        <DISCORD_ICON />
+                        <span className="text-muted-foreground">Discord:</span>
+                        <span className="text-minecraft-diamond">{profile.discord_username}</span>
+                      </div>
+                    )}
+                    {profile.telegram_username && (
+                      <a 
+                        href={`https://t.me/${profile.telegram_username}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-3 text-sm hover:text-primary transition-colors"
+                      >
+                        <TELEGRAM_ICON />
+                        <span className="text-muted-foreground">Telegram:</span>
+                        <span className="text-minecraft-diamond">@{profile.telegram_username}</span>
+                        <ExternalLink className="w-3 h-3 text-muted-foreground" />
+                      </a>
+                    )}
+                  </div>
+                )}
+
+                {/* Info */}
+                <div className="border-t border-border/50 p-4 space-y-3 text-sm">
+                  <div className="flex items-center gap-3 text-muted-foreground">
+                    <Calendar className="w-4 h-4" />
+                    <span>Регистрация: {format(new Date(profile.created_at), 'dd.MM.yyyy', { locale: ru })}</span>
+                  </div>
+                  {profile.last_seen_at && (
+                    <div className="flex items-center gap-3 text-muted-foreground">
+                      <Clock className="w-4 h-4" />
+                      <span>Был(а) здесь: {formatDistanceToNow(new Date(profile.last_seen_at), { addSuffix: true, locale: ru })}</span>
+                    </div>
+                  )}
+                </div>
+              </Card>
+            </div>
+
+            {/* Right content - Banner + Stats + Content */}
+            <div className="lg:col-span-2 space-y-4">
+              {/* Banner */}
+              <Card className="glass-card overflow-hidden">
+                <div 
+                  className="h-48 bg-gradient-to-br from-primary/30 via-accent/20 to-minecraft-diamond/30"
+                  style={profile.banner_url ? {
+                    backgroundImage: `url(${profile.banner_url})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                  } : {}}
+                >
+                  <div className="w-full h-full bg-gradient-to-t from-card/80 to-transparent flex items-end">
+                    <div className="p-6">
+                      <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
+                        {profile.username}
+                        {roles.includes('admin') && (
+                          <Crown className="w-5 h-5 text-minecraft-gold" />
+                        )}
+                      </h2>
+                      {profile.last_seen_at && (
+                        <p className="text-sm text-muted-foreground">
+                          {formatDistanceToNow(new Date(profile.last_seen_at), { addSuffix: true, locale: ru })}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </Card>
+
+              {/* Stats */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <Card className="glass-card">
+                  <CardContent className="p-4 text-center">
+                    <Package className="w-5 h-5 mx-auto mb-2 text-primary" />
+                    <p className="text-2xl font-bold text-foreground">{projects.length}</p>
+                    <p className="text-xs text-muted-foreground">Ресурсов</p>
+                  </CardContent>
+                </Card>
+                <Card className="glass-card">
+                  <CardContent className="p-4 text-center">
+                    <MessageSquare className="w-5 h-5 mx-auto mb-2 text-minecraft-diamond" />
+                    <p className="text-2xl font-bold text-foreground">{stats?.comments || 0}</p>
+                    <p className="text-xs text-muted-foreground">Сообщений</p>
+                  </CardContent>
+                </Card>
+                <Card className="glass-card">
+                  <CardContent className="p-4 text-center">
+                    <Star className="w-5 h-5 mx-auto mb-2 text-minecraft-gold" />
+                    <p className="text-2xl font-bold text-foreground">{stats?.ratings || 0}</p>
+                    <p className="text-xs text-muted-foreground">Оценок</p>
+                  </CardContent>
+                </Card>
+                <Card className="glass-card">
+                  <CardContent className="p-4 text-center">
+                    <Heart className="w-5 h-5 mx-auto mb-2 text-destructive" />
+                    <p className="text-2xl font-bold text-foreground">{stats?.favorites || 0}</p>
+                    <p className="text-xs text-muted-foreground">Избранного</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Content tabs */}
+              <Card className="glass-card">
+                <Tabs defaultValue="projects" className="w-full">
+                  <TabsList className="w-full justify-start border-b border-border/50 rounded-none bg-transparent p-0">
+                    <TabsTrigger 
+                      value="projects"
+                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-6"
+                    >
+                      Ресурсы ({projects.length})
+                    </TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="projects" className="p-4">
+                    {projects.length === 0 ? (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <Package className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                        <p>Нет опубликованных ресурсов</p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {projects.map((project) => (
+                          <ProjectCard key={project.id} project={project as any} />
+                        ))}
+                      </div>
+                    )}
+                  </TabsContent>
+                </Tabs>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </Layout>
+    </>
+  );
+}
