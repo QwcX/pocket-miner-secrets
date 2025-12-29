@@ -164,3 +164,13 @@ export const DONOR_TIER_NICK_CLASSES: Record<DonorTier, string> = {
   diamond: 'donor-diamond',
   sponsor: 'donor-sponsor',
 };
+
+// Role-based nickname classes (takes priority over donor tier for special roles)
+export const ROLE_NICK_CLASSES: Record<AppRole, string> = {
+  admin: 'role-admin',
+  moderator: 'role-moderator',
+  user: '',
+  developer: 'role-developer',
+  player: 'role-player',
+  curator: 'role-curator',
+};
