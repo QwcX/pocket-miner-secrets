@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { DonorTier, AppRole, DONOR_TIER_NICK_CLASSES, ROLE_NICK_CLASSES } from '@/types/database';
+import { DonorTier, AppRole, DONOR_TIER_NICK_CLASSES } from '@/types/database';
 import { cn } from '@/lib/utils';
 
 interface UserNicknameProps {
@@ -21,10 +21,18 @@ export function UserNickname({
   className,
   asLink = true 
 }: UserNicknameProps) {
-  // Priority: custom color > role (for admin/mod/dev/curator) > donor tier > default green
+  // Priority order (highest to lowest):
+  // 1. Admin (red)
+  // 2. Moderator (blue/diamond)
+  // 3. Curator (gold)
+  // 4. Developer (purple)
+  // 5. Player (green with glow)
+  // 6. Donor tiers (sponsor, diamond, gold, silver, bronze) - only if no special role
+  // 7. User (default green)
+  
   let nickClass = '';
   
-  // Special roles always get their colors
+  // Staff roles ALWAYS take priority over donor tiers
   if (role === 'admin') {
     nickClass = 'role-admin';
   } else if (role === 'moderator') {
@@ -33,14 +41,21 @@ export function UserNickname({
     nickClass = 'role-curator';
   } else if (role === 'developer') {
     nickClass = 'role-developer';
-  } else if (donorTier !== 'none') {
-    // Donor tiers
-    nickClass = DONOR_TIER_NICK_CLASSES[donorTier];
   } else if (role === 'player') {
-    nickClass = 'role-player';
+    // Player role with donor tier overlay
+    if (donorTier !== 'none') {
+      nickClass = DONOR_TIER_NICK_CLASSES[donorTier];
+    } else {
+      nickClass = 'role-player';
+    }
   } else {
-    // Default for regular users - green color
-    nickClass = 'text-primary';
+    // Regular user - check for donor tier
+    if (donorTier !== 'none') {
+      nickClass = DONOR_TIER_NICK_CLASSES[donorTier];
+    } else {
+      // Default green for regular users
+      nickClass = 'text-primary';
+    }
   }
   
   const style = customColor ? { color: customColor, textShadow: `0 0 10px ${customColor}` } : undefined;
