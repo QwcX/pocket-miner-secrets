@@ -134,38 +134,95 @@
   }
 }
 
-/* Theme: Glass iOS */
+/* Theme: Default Dark (Minecraft green) */
+.theme-dark {
+  --background: 220 20% 10%;
+  --foreground: 210 20% 95%;
+  --card: 220 18% 14%;
+  --card-foreground: 210 20% 95%;
+  --popover: 220 18% 14%;
+  --popover-foreground: 210 20% 95%;
+  --primary: 142 70% 45%;
+  --primary-foreground: 210 20% 98%;
+  --secondary: 220 15% 20%;
+  --secondary-foreground: 210 20% 95%;
+  --muted: 220 15% 18%;
+  --muted-foreground: 215 15% 60%;
+  --accent: 280 60% 50%;
+  --accent-foreground: 210 20% 98%;
+  --border: 220 15% 22%;
+  --input: 220 15% 18%;
+  --ring: 142 70% 45%;
+}
+
+/* Theme: Glass iOS (Purple/Blue) */
 .theme-glass {
-  --background: 240 15% 8%;
-  --card: 240 15% 12%;
-  --border: 240 10% 25%;
-  --primary: 280 80% 60%;
-  --accent: 200 90% 60%;
+  --background: 250 25% 8%;
+  --foreground: 210 20% 95%;
+  --card: 250 20% 12%;
+  --card-foreground: 210 20% 95%;
+  --popover: 250 20% 12%;
+  --popover-foreground: 210 20% 95%;
+  --primary: 270 80% 60%;
+  --primary-foreground: 210 20% 98%;
+  --secondary: 250 20% 18%;
+  --secondary-foreground: 210 20% 95%;
+  --muted: 250 15% 16%;
+  --muted-foreground: 250 15% 55%;
+  --accent: 200 90% 55%;
+  --accent-foreground: 210 20% 98%;
+  --border: 250 15% 22%;
+  --input: 250 15% 16%;
+  --ring: 270 80% 60%;
 }
 
 .theme-glass .glass-card {
   background: linear-gradient(135deg, hsl(var(--card) / 0.6), hsl(var(--card) / 0.3));
   backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid hsl(var(--border) / 0.3);
-  box-shadow: 0 8px 32px hsl(var(--primary) / 0.1), inset 0 1px 0 hsl(255 100% 100% / 0.05);
+  border: 1px solid hsl(var(--border) / 0.4);
+  box-shadow: 0 8px 32px hsl(var(--primary) / 0.15), inset 0 1px 0 hsl(0 0% 100% / 0.05);
 }
 
-/* Theme: Midnight */
+/* Theme: Midnight (Deep Blue) */
 .theme-midnight {
-  --background: 230 30% 8%;
-  --card: 230 25% 12%;
-  --primary: 220 90% 60%;
+  --background: 230 35% 7%;
+  --foreground: 210 20% 95%;
+  --card: 230 30% 11%;
+  --card-foreground: 210 20% 95%;
+  --popover: 230 30% 11%;
+  --popover-foreground: 210 20% 95%;
+  --primary: 210 100% 55%;
+  --primary-foreground: 210 20% 98%;
+  --secondary: 230 25% 16%;
+  --secondary-foreground: 210 20% 95%;
+  --muted: 230 20% 14%;
+  --muted-foreground: 220 15% 55%;
   --accent: 280 70% 55%;
-  --border: 230 20% 20%;
+  --accent-foreground: 210 20% 98%;
+  --border: 230 20% 18%;
+  --input: 230 20% 14%;
+  --ring: 210 100% 55%;
 }
 
-/* Theme: Forest */
+/* Theme: Forest (Green) */
 .theme-forest {
-  --background: 150 20% 8%;
-  --card: 150 18% 12%;
+  --background: 140 25% 7%;
+  --foreground: 140 10% 95%;
+  --card: 140 20% 11%;
+  --card-foreground: 140 10% 95%;
+  --popover: 140 20% 11%;
+  --popover-foreground: 140 10% 95%;
   --primary: 142 70% 45%;
+  --primary-foreground: 140 10% 98%;
+  --secondary: 140 15% 16%;
+  --secondary-foreground: 140 10% 95%;
+  --muted: 140 12% 14%;
+  --muted-foreground: 140 10% 55%;
   --accent: 80 60% 50%;
-  --border: 150 15% 20%;
+  --accent-foreground: 140 10% 98%;
+  --border: 140 15% 18%;
+  --input: 140 12% 14%;
+  --ring: 142 70% 45%;
 }
 
 /* Custom scrollbar */

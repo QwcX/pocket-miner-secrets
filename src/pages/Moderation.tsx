@@ -94,13 +94,22 @@ export default function Moderation() {
 
   // Approve mutation
   const approveMutation = useMutation({
-    mutationFn: async (projectId: string) => {
+    mutationFn: async (project: Project) => {
       const { error } = await supabase
         .from('projects')
         .update({ is_approved: true })
-        .eq('id', projectId);
+        .eq('id', project.id);
       
       if (error) throw error;
+
+      // Send notification to project author
+      await supabase.from('notifications').insert({
+        user_id: project.author_id,
+        type: 'project_approved',
+        title: 'Проект одобрен! ✅',
+        message: `Ваш проект "${project.title}" был одобрен модератором и теперь доступен для всех пользователей.`,
+        link: `/project/${project.slug}`,
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pendingProjects'] });
@@ -121,11 +130,22 @@ export default function Moderation() {
 
   // Reject mutation (delete project)
   const rejectMutation = useMutation({
-    mutationFn: async (projectId: string) => {
+    mutationFn: async ({ project, reason }: { project: Project; reason: string }) => {
+      // First send notification before deleting
+      await supabase.from('notifications').insert({
+        user_id: project.author_id,
+        type: 'project_rejected',
+        title: 'Проект отклонён ❌',
+        message: reason 
+          ? `Ваш проект "${project.title}" был отклонён. Причина: ${reason}`
+          : `Ваш проект "${project.title}" был отклонён модератором.`,
+      });
+
+      // Then delete the project
       const { error } = await supabase
         .from('projects')
         .delete()
-        .eq('id', projectId);
+        .eq('id', project.id);
       
       if (error) throw error;
     },
@@ -136,7 +156,7 @@ export default function Moderation() {
       setRejectReason('');
       toast({
         title: 'Проект отклонён',
-        description: 'Проект был удалён',
+        description: 'Уведомление отправлено автору',
       });
     },
     onError: (error: Error) => {
@@ -232,7 +252,7 @@ export default function Moderation() {
                   <Button
                     size="sm"
                     variant="default"
-                    onClick={() => approveMutation.mutate(project.id)}
+                    onClick={() => approveMutation.mutate(project)}
                     disabled={approveMutation.isPending}
                   >
                     <Check className="w-4 h-4 mr-1" />
@@ -360,7 +380,7 @@ export default function Moderation() {
                 </Button>
                 <Button
                   variant="destructive"
-                  onClick={() => selectedProject && rejectMutation.mutate(selectedProject.id)}
+                  onClick={() => selectedProject && rejectMutation.mutate({ project: selectedProject, reason: rejectReason })}
                   disabled={rejectMutation.isPending}
                 >
                   {rejectMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
