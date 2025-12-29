@@ -1,0 +1,204 @@
+{
+  "profiles": [
+    {
+      "id": "d797ccfe-ef56-4e86-bdad-b32e94ee3d11",
+      "username": "Xuisos3000",
+      "bio": "ы",
+      "avatar_url": "https://iqrbqygekyfgfcwoiavs.supabase.co/storage/v1/object/public/avatars/d797ccfe-ef56-4e86-bdad-b32e94ee3d11/avatar.png",
+      "banner_url": "https://iqrbqygekyfgfcwoiavs.supabase.co/storage/v1/object/public/avatars/d797ccfe-ef56-4e86-bdad-b32e94ee3d11/banner.jpg",
+      "created_at": "2025-12-29T11:34:40.615062+00:00",
+      "updated_at": "2025-12-29T12:17:02.958391+00:00"
+    },
+    {
+      "id": "096eb388-34fb-4e41-b112-3306f3e88e1e",
+      "username": "Xui123",
+      "bio": null,
+      "avatar_url": null,
+      "banner_url": null,
+      "created_at": "2025-12-29T12:30:17.958543+00:00",
+      "updated_at": "2025-12-29T12:30:17.958543+00:00"
+    },
+    {
+      "id": "99a71870-d78e-47c3-b042-29d7f4ae7205",
+      "username": "XuisosTest",
+      "bio": "",
+      "avatar_url": "https://iqrbqygekyfgfcwoiavs.supabase.co/storage/v1/object/public/avatars/99a71870-d78e-47c3-b042-29d7f4ae7205/avatar.png",
+      "banner_url": "https://iqrbqygekyfgfcwoiavs.supabase.co/storage/v1/object/public/avatars/99a71870-d78e-47c3-b042-29d7f4ae7205/banner.png",
+      "created_at": "2025-12-29T14:10:02.988048+00:00",
+      "updated_at": "2025-12-29T14:10:21.795014+00:00"
+    },
+    {
+      "id": "7644cae6-fd71-423f-a456-c780c0e426e2",
+      "username": "XuisosTest2",
+      "bio": null,
+      "avatar_url": null,
+      "banner_url": null,
+      "created_at": "2025-12-29T14:11:08.274787+00:00",
+      "updated_at": "2025-12-29T14:11:08.274787+00:00"
+    },
+    {
+      "id": "65499963-6b43-40ed-a6f9-e4cee66723a9",
+      "username": "XuisosTest3",
+      "bio": "Тест 1232",
+      "avatar_url": "https://iqrbqygekyfgfcwoiavs.supabase.co/storage/v1/object/public/avatars/65499963-6b43-40ed-a6f9-e4cee66723a9/avatar.png",
+      "banner_url": "https://iqrbqygekyfgfcwoiavs.supabase.co/storage/v1/object/public/avatars/65499963-6b43-40ed-a6f9-e4cee66723a9/banner.png",
+      "created_at": "2025-12-29T14:13:20.715656+00:00",
+      "updated_at": "2025-12-29T14:13:39.880902+00:00"
+    }
+  ],
+  "projects": [
+    {
+      "id": "00d6a031-9354-4aa6-8a61-309629cb3242",
+      "title": "TestLeak",
+      "slug": "testleak-build-1",
+      "description": "Первая официальная сборка TestLeak версии 1.0!",
+      "content_type": "build",
+      "author_id": "d797ccfe-ef56-4e86-bdad-b32e94ee3d11",
+      "download_url": "https://drive.google.com/testleak-v1",
+      "minecraft_versions": ["1.20.1", "1.20.4", "1.21"],
+      "tags": ["сборка", "оптимизация", "моды", "официальная"],
+      "is_approved": true,
+      "is_premium": false,
+      "downloads_count": 0,
+      "created_at": "2025-12-29T11:49:21.108629+00:00"
+    },
+    {
+      "id": "227e047d-566c-4cab-9fb4-2051890efa80",
+      "title": "Тип крутая хута",
+      "slug": "--mjr8pitx",
+      "description": "тест https://www.youtube.com/watch?v=AsUd46Ir-6U",
+      "content_type": "build",
+      "author_id": "65499963-6b43-40ed-a6f9-e4cee66723a9",
+      "download_url": "https://workupload.com/file/fASPQPjYdWn",
+      "minecraft_versions": ["1.16.1"],
+      "tags": ["дрисло"],
+      "is_approved": false,
+      "is_premium": false,
+      "downloads_count": 1,
+      "created_at": "2025-12-29T14:14:50.42101+00:00"
+    }
+  ],
+  "project_versions": [
+    {
+      "id": "370e0184-9260-46a9-b854-a24361b56bad",
+      "project_id": "00d6a031-9354-4aa6-8a61-309629cb3242",
+      "version_number": "1.0",
+      "changelog": "Первый релиз TestLeak!",
+      "file_url": "https://drive.google.com/testleak-v1",
+      "minecraft_versions": ["1.20.1", "1.20.4", "1.21"],
+      "created_at": "2025-12-29T11:49:21.108629+00:00"
+    },
+    {
+      "id": "4b799a3a-be6f-49d8-8cdf-670b71c322f9",
+      "project_id": "227e047d-566c-4cab-9fb4-2051890efa80",
+      "version_number": "1.0.0",
+      "changelog": null,
+      "file_url": "https://workupload.com/file/fASPQPjYdWn",
+      "minecraft_versions": ["1.16.1"],
+      "created_at": "2025-12-29T14:14:50.659692+00:00"
+    }
+  ],
+  "ratings": [
+    {
+      "id": "f9e2ad8b-3ea3-4cd8-a535-47a0fa839927",
+      "project_id": "00d6a031-9354-4aa6-8a61-309629cb3242",
+      "user_id": "d797ccfe-ef56-4e86-bdad-b32e94ee3d11",
+      "rating": 5,
+      "created_at": "2025-12-29T11:51:14.597199+00:00"
+    },
+    {
+      "id": "f6930c54-3b90-40a1-a2bd-c96cd35ca337",
+      "project_id": "00d6a031-9354-4aa6-8a61-309629cb3242",
+      "user_id": "096eb388-34fb-4e41-b112-3306f3e88e1e",
+      "rating": 1,
+      "created_at": "2025-12-29T12:32:14.539889+00:00"
+    },
+    {
+      "id": "5d7513da-b00f-4f0c-8145-e2daaad03a15",
+      "project_id": "227e047d-566c-4cab-9fb4-2051890efa80",
+      "user_id": "65499963-6b43-40ed-a6f9-e4cee66723a9",
+      "rating": 4,
+      "created_at": "2025-12-29T14:15:09.148255+00:00"
+    }
+  ],
+  "favorites": [
+    {
+      "id": "663b2224-a080-426c-b02d-3c1eaf3cdcb6",
+      "project_id": "227e047d-566c-4cab-9fb4-2051890efa80",
+      "user_id": "65499963-6b43-40ed-a6f9-e4cee66723a9",
+      "created_at": "2025-12-29T14:15:11.149339+00:00"
+    }
+  ],
+  "user_roles": [
+    {"user_id": "d797ccfe-ef56-4e86-bdad-b32e94ee3d11", "role": "moderator"},
+    {"user_id": "d797ccfe-ef56-4e86-bdad-b32e94ee3d11", "role": "admin"},
+    {"user_id": "d797ccfe-ef56-4e86-bdad-b32e94ee3d11", "role": "curator"},
+    {"user_id": "096eb388-34fb-4e41-b112-3306f3e88e1e", "role": "user"},
+    {"user_id": "99a71870-d78e-47c3-b042-29d7f4ae7205", "role": "user"},
+    {"user_id": "7644cae6-fd71-423f-a456-c780c0e426e2", "role": "user"},
+    {"user_id": "65499963-6b43-40ed-a6f9-e4cee66723a9", "role": "user"}
+  ],
+  "user_donors": [
+    {
+      "id": "af47fe25-7e33-4cd6-8ee7-427cfa8ca011",
+      "user_id": "d797ccfe-ef56-4e86-bdad-b32e94ee3d11",
+      "tier": "sponsor",
+      "nickname_color": "#ff00ff",
+      "expires_at": null,
+      "created_at": "2025-12-29T12:48:13.891474+00:00"
+    }
+  ],
+  "profile_subscriptions": [
+    {
+      "id": "f14d343f-2703-45d4-9ced-12fa99206957",
+      "follower_id": "99a71870-d78e-47c3-b042-29d7f4ae7205",
+      "following_id": "d797ccfe-ef56-4e86-bdad-b32e94ee3d11",
+      "created_at": "2025-12-29T14:10:46.214494+00:00"
+    },
+    {
+      "id": "186edca2-26a7-4155-a879-1fda5b0b9e6c",
+      "follower_id": "7644cae6-fd71-423f-a456-c780c0e426e2",
+      "following_id": "99a71870-d78e-47c3-b042-29d7f4ae7205",
+      "created_at": "2025-12-29T14:11:17.450055+00:00"
+    }
+  ],
+  "profile_ratings": [
+    {
+      "id": "ff6bb90d-3e91-45f9-8756-5e839a13206a",
+      "profile_id": "d797ccfe-ef56-4e86-bdad-b32e94ee3d11",
+      "rater_id": "99a71870-d78e-47c3-b042-29d7f4ae7205",
+      "is_positive": true,
+      "created_at": "2025-12-29T14:10:47.765963+00:00"
+    },
+    {
+      "id": "bcc817b9-5859-4810-bbae-ea0bc8b9729b",
+      "profile_id": "99a71870-d78e-47c3-b042-29d7f4ae7205",
+      "rater_id": "7644cae6-fd71-423f-a456-c780c0e426e2",
+      "is_positive": true,
+      "created_at": "2025-12-29T14:11:18.120564+00:00"
+    }
+  ],
+  "profile_wall_posts": [
+    {
+      "id": "5a75cc07-8220-4ed3-b363-ea194a7ca506",
+      "profile_id": "d797ccfe-ef56-4e86-bdad-b32e94ee3d11",
+      "author_id": "99a71870-d78e-47c3-b042-29d7f4ae7205",
+      "content": "ТЕст 123",
+      "created_at": "2025-12-29T14:10:41.872316+00:00"
+    }
+  ],
+  "blocked_words": [
+    {"word": "discord.gg"},
+    {"word": "t.me/joinchat"},
+    {"word": "bit.ly"},
+    {"word": "tinyurl.com"}
+  ],
+  "private_messages": [
+    {"sender_id": "096eb388-34fb-4e41-b112-3306f3e88e1e", "receiver_id": "d797ccfe-ef56-4e86-bdad-b32e94ee3d11", "content": "Привет", "created_at": "2025-12-29T13:07:32.915396+00:00"},
+    {"sender_id": "d797ccfe-ef56-4e86-bdad-b32e94ee3d11", "receiver_id": "096eb388-34fb-4e41-b112-3306f3e88e1e", "content": "иди нахуй", "created_at": "2025-12-29T13:08:11.283901+00:00"},
+    {"sender_id": "7644cae6-fd71-423f-a456-c780c0e426e2", "receiver_id": "99a71870-d78e-47c3-b042-29d7f4ae7205", "content": "Привет, хочешь миньет?", "created_at": "2025-12-29T14:11:27.030423+00:00"}
+  ],
+  "comments": [],
+  "user_reputation": [],
+  "moderation_logs": []
+}
