@@ -1,13 +1,19 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/lib/auth';
 import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Textarea } from '@/components/ui/textarea';
 import { Helmet } from 'react-helmet-async';
+import { useToast } from '@/hooks/use-toast';
+import { UserNickname } from '@/components/UserNickname';
+import { DonorBadge } from '@/components/DonorBadge';
+import { ProjectCard } from '@/components/projects/ProjectCard';
 import { 
   User, 
   Loader2, 
@@ -23,11 +29,18 @@ import {
   Gamepad2,
   BookMarked,
   ExternalLink,
+  UserPlus,
+  UserMinus,
+  ThumbsUp,
+  ThumbsDown,
+  Send,
+  Trash2,
+  Mail,
 } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
 import { ru } from 'date-fns/locale';
-import { ROLE_LABELS, ROLE_COLORS, AppRole, CONTENT_TYPE_LABELS, CONTENT_TYPE_COLORS } from '@/types/database';
-import { ProjectCard } from '@/components/projects/ProjectCard';
+import { ROLE_LABELS, ROLE_COLORS, AppRole, DonorTier } from '@/types/database';
+import { useState } from 'react';
 
 const ROLE_ICONS: Record<AppRole, typeof Crown> = {
   admin: Crown,
@@ -53,6 +66,10 @@ const TELEGRAM_ICON = () => (
 export default function UserProfile() {
   const { userId } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [wallPostText, setWallPostText] = useState('');
 
   // Fetch user profile
   const { data: profile, isLoading: profileLoading } = useQuery({
@@ -85,6 +102,21 @@ export default function UserProfile() {
     enabled: !!userId,
   });
 
+  // Fetch donor info
+  const { data: donorInfo } = useQuery({
+    queryKey: ['userDonor', userId],
+    queryFn: async () => {
+      if (!userId) return null;
+      const { data } = await supabase
+        .from('user_donors')
+        .select('tier, nickname_color')
+        .eq('user_id', userId)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!userId,
+  });
+
   // Fetch user projects
   const { data: projects = [] } = useQuery({
     queryKey: ['userProfileProjects', userId],
@@ -102,7 +134,101 @@ export default function UserProfile() {
     enabled: !!userId,
   });
 
-  // Fetch user stats
+  // Fetch subscription status
+  const { data: isSubscribed = false } = useQuery({
+    queryKey: ['subscription', user?.id, userId],
+    queryFn: async () => {
+      if (!user || !userId || user.id === userId) return false;
+      const { data } = await supabase
+        .from('profile_subscriptions')
+        .select('id')
+        .eq('follower_id', user.id)
+        .eq('following_id', userId)
+        .maybeSingle();
+      return !!data;
+    },
+    enabled: !!user && !!userId,
+  });
+
+  // Fetch subscribers count
+  const { data: subscribersCount = 0 } = useQuery({
+    queryKey: ['subscribers-count', userId],
+    queryFn: async () => {
+      if (!userId) return 0;
+      const { count } = await supabase
+        .from('profile_subscriptions')
+        .select('id', { count: 'exact' })
+        .eq('following_id', userId);
+      return count || 0;
+    },
+    enabled: !!userId,
+  });
+
+  // Fetch profile ratings
+  const { data: profileRating } = useQuery({
+    queryKey: ['profile-rating', userId],
+    queryFn: async () => {
+      if (!userId) return { positive: 0, negative: 0, userRating: null };
+      
+      const { data: ratings } = await supabase
+        .from('profile_ratings')
+        .select('is_positive, rater_id')
+        .eq('profile_id', userId);
+      
+      const positive = ratings?.filter(r => r.is_positive).length || 0;
+      const negative = ratings?.filter(r => !r.is_positive).length || 0;
+      const userRating = user ? ratings?.find(r => r.rater_id === user.id)?.is_positive : null;
+      
+      return { positive, negative, userRating };
+    },
+    enabled: !!userId,
+  });
+
+  // Fetch wall posts
+  const { data: wallPosts = [] } = useQuery({
+    queryKey: ['wall-posts', userId],
+    queryFn: async () => {
+      if (!userId) return [];
+      
+      const { data: posts } = await supabase
+        .from('profile_wall_posts')
+        .select('*')
+        .eq('profile_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(20);
+      
+      if (!posts || posts.length === 0) return [];
+      
+      const authorIds = [...new Set(posts.map(p => p.author_id))];
+      const [profilesRes, rolesRes, donorsRes] = await Promise.all([
+        supabase.from('profiles').select('id, username, avatar_url').in('id', authorIds),
+        supabase.from('user_roles').select('user_id, role').in('user_id', authorIds),
+        supabase.from('user_donors').select('user_id, tier, nickname_color').in('user_id', authorIds),
+      ]);
+      
+      const profileMap = new Map((profilesRes.data || []).map(p => [p.id, p]));
+      const roleMap = new Map<string, AppRole>();
+      (rolesRes.data || []).forEach(r => {
+        const priority: Record<string, number> = { admin: 5, moderator: 4, curator: 3, developer: 2, player: 1, user: 0 };
+        const current = roleMap.get(r.user_id);
+        if (!current || priority[r.role] > priority[current]) {
+          roleMap.set(r.user_id, r.role as AppRole);
+        }
+      });
+      const donorMap = new Map((donorsRes.data || []).map(d => [d.user_id, d]));
+      
+      return posts.map(post => ({
+        ...post,
+        author: profileMap.get(post.author_id),
+        authorRole: roleMap.get(post.author_id) || 'user',
+        authorDonorTier: (donorMap.get(post.author_id)?.tier as DonorTier) || 'none',
+        authorNicknameColor: donorMap.get(post.author_id)?.nickname_color || null,
+      }));
+    },
+    enabled: !!userId,
+  });
+
+  // Stats query
   const { data: stats } = useQuery({
     queryKey: ['userProfileStats', userId],
     queryFn: async () => {
@@ -121,6 +247,92 @@ export default function UserProfile() {
       };
     },
     enabled: !!userId,
+  });
+
+  // Subscribe mutation
+  const subscribeMutation = useMutation({
+    mutationFn: async () => {
+      if (!user || !userId) throw new Error('Not authenticated');
+      
+      if (isSubscribed) {
+        await supabase
+          .from('profile_subscriptions')
+          .delete()
+          .eq('follower_id', user.id)
+          .eq('following_id', userId);
+      } else {
+        await supabase.from('profile_subscriptions').insert({
+          follower_id: user.id,
+          following_id: userId,
+        });
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['subscription', user?.id, userId] });
+      queryClient.invalidateQueries({ queryKey: ['subscribers-count', userId] });
+      toast({ title: isSubscribed ? 'Отписались' : 'Подписались' });
+    },
+  });
+
+  // Rate profile mutation
+  const rateMutation = useMutation({
+    mutationFn: async (isPositive: boolean) => {
+      if (!user || !userId) throw new Error('Not authenticated');
+      
+      const { data: existing } = await supabase
+        .from('profile_ratings')
+        .select('id, is_positive')
+        .eq('profile_id', userId)
+        .eq('rater_id', user.id)
+        .maybeSingle();
+      
+      if (existing) {
+        if (existing.is_positive === isPositive) {
+          // Remove rating if clicking same button
+          await supabase.from('profile_ratings').delete().eq('id', existing.id);
+        } else {
+          // Update rating
+          await supabase.from('profile_ratings').update({ is_positive: isPositive }).eq('id', existing.id);
+        }
+      } else {
+        await supabase.from('profile_ratings').insert({
+          profile_id: userId,
+          rater_id: user.id,
+          is_positive: isPositive,
+        });
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['profile-rating', userId] });
+    },
+  });
+
+  // Wall post mutation
+  const wallPostMutation = useMutation({
+    mutationFn: async () => {
+      if (!user || !userId || !wallPostText.trim()) throw new Error('Invalid');
+      
+      await supabase.from('profile_wall_posts').insert({
+        profile_id: userId,
+        author_id: user.id,
+        content: wallPostText.trim(),
+      });
+    },
+    onSuccess: () => {
+      setWallPostText('');
+      queryClient.invalidateQueries({ queryKey: ['wall-posts', userId] });
+      toast({ title: 'Сообщение добавлено' });
+    },
+  });
+
+  // Delete wall post mutation
+  const deleteWallPostMutation = useMutation({
+    mutationFn: async (postId: string) => {
+      await supabase.from('profile_wall_posts').delete().eq('id', postId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['wall-posts', userId] });
+    },
   });
 
   if (profileLoading) {
@@ -145,8 +357,8 @@ export default function UserProfile() {
     );
   }
 
-  const totalDownloads = projects.reduce((sum, p) => sum + (p.downloads_count || 0), 0);
-  const primaryRole = roles.find(r => r === 'admin') || roles.find(r => r === 'moderator') || roles[0];
+  const primaryRole = roles.find(r => r === 'admin') || roles.find(r => r === 'moderator') || roles[0] || 'user';
+  const donorTier = (donorInfo?.tier as DonorTier) || 'none';
 
   return (
     <>
@@ -169,7 +381,24 @@ export default function UserProfile() {
                     </AvatarFallback>
                   </Avatar>
                   
-                  <h1 className="text-xl font-bold mt-4 text-foreground">{profile.username}</h1>
+                  <div className="mt-4">
+                    <UserNickname
+                      username={profile.username}
+                      userId={userId!}
+                      role={primaryRole}
+                      donorTier={donorTier}
+                      customColor={donorInfo?.nickname_color}
+                      asLink={false}
+                      className="text-xl"
+                    />
+                  </div>
+                  
+                  {/* Donor badge */}
+                  {donorTier !== 'none' && (
+                    <div className="mt-2">
+                      <DonorBadge tier={donorTier} />
+                    </div>
+                  )}
                   
                   {/* Roles */}
                   <div className="flex flex-wrap justify-center gap-2 mt-3">
@@ -186,6 +415,57 @@ export default function UserProfile() {
 
                   {profile.bio && (
                     <p className="mt-4 text-sm text-muted-foreground">{profile.bio}</p>
+                  )}
+                  
+                  {/* Profile rating */}
+                  <div className="flex justify-center gap-4 mt-4">
+                    <button
+                      onClick={() => user && rateMutation.mutate(true)}
+                      disabled={!user || user.id === userId}
+                      className={`flex items-center gap-1 px-3 py-1 rounded transition-colors ${
+                        profileRating?.userRating === true
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-secondary hover:bg-secondary/80'
+                      }`}
+                    >
+                      <ThumbsUp className="w-4 h-4" />
+                      <span>{profileRating?.positive || 0}</span>
+                    </button>
+                    <button
+                      onClick={() => user && rateMutation.mutate(false)}
+                      disabled={!user || user.id === userId}
+                      className={`flex items-center gap-1 px-3 py-1 rounded transition-colors ${
+                        profileRating?.userRating === false
+                          ? 'bg-destructive text-destructive-foreground'
+                          : 'bg-secondary hover:bg-secondary/80'
+                      }`}
+                    >
+                      <ThumbsDown className="w-4 h-4" />
+                      <span>{profileRating?.negative || 0}</span>
+                    </button>
+                  </div>
+                  
+                  {/* Action buttons */}
+                  {user && user.id !== userId && (
+                    <div className="flex gap-2 mt-4">
+                      <Button
+                        variant={isSubscribed ? 'outline' : 'default'}
+                        className="flex-1"
+                        onClick={() => subscribeMutation.mutate()}
+                      >
+                        {isSubscribed ? (
+                          <><UserMinus className="w-4 h-4 mr-2" />Отписаться</>
+                        ) : (
+                          <><UserPlus className="w-4 h-4 mr-2" />Подписаться</>
+                        )}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => navigate(`/messages/${userId}`)}
+                      >
+                        <Mail className="w-4 h-4" />
+                      </Button>
+                    </div>
                   )}
                 </div>
 
@@ -227,11 +507,15 @@ export default function UserProfile() {
                       <span>Был(а) здесь: {formatDistanceToNow(new Date(profile.last_seen_at), { addSuffix: true, locale: ru })}</span>
                     </div>
                   )}
+                  <div className="flex items-center gap-3 text-muted-foreground">
+                    <UserPlus className="w-4 h-4" />
+                    <span>Подписчиков: {subscribersCount}</span>
+                  </div>
                 </div>
               </Card>
             </div>
 
-            {/* Right content - Banner + Stats + Content */}
+            {/* Right content */}
             <div className="lg:col-span-2 space-y-4">
               {/* Banner */}
               <Card className="glass-card overflow-hidden">
@@ -246,16 +530,16 @@ export default function UserProfile() {
                   <div className="w-full h-full bg-gradient-to-t from-card/80 to-transparent flex items-end">
                     <div className="p-6">
                       <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
-                        {profile.username}
-                        {roles.includes('admin') && (
-                          <Crown className="w-5 h-5 text-minecraft-gold" />
-                        )}
+                        <UserNickname
+                          username={profile.username}
+                          userId={userId!}
+                          role={primaryRole}
+                          donorTier={donorTier}
+                          customColor={donorInfo?.nickname_color}
+                          asLink={false}
+                        />
+                        {donorTier !== 'none' && <DonorBadge tier={donorTier} showLabel={false} />}
                       </h2>
-                      {profile.last_seen_at && (
-                        <p className="text-sm text-muted-foreground">
-                          {formatDistanceToNow(new Date(profile.last_seen_at), { addSuffix: true, locale: ru })}
-                        </p>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -295,8 +579,14 @@ export default function UserProfile() {
 
               {/* Content tabs */}
               <Card className="glass-card">
-                <Tabs defaultValue="projects" className="w-full">
+                <Tabs defaultValue="wall" className="w-full">
                   <TabsList className="w-full justify-start border-b border-border/50 rounded-none bg-transparent p-0">
+                    <TabsTrigger 
+                      value="wall"
+                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-6"
+                    >
+                      Стена
+                    </TabsTrigger>
                     <TabsTrigger 
                       value="projects"
                       className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-6"
@@ -304,6 +594,73 @@ export default function UserProfile() {
                       Ресурсы ({projects.length})
                     </TabsTrigger>
                   </TabsList>
+
+                  <TabsContent value="wall" className="p-4 space-y-4">
+                    {/* Post form */}
+                    {user && (
+                      <div className="flex gap-3">
+                        <Textarea
+                          placeholder="Написать на стене..."
+                          value={wallPostText}
+                          onChange={e => setWallPostText(e.target.value)}
+                          className="resize-none"
+                          rows={2}
+                        />
+                        <Button
+                          onClick={() => wallPostMutation.mutate()}
+                          disabled={!wallPostText.trim() || wallPostMutation.isPending}
+                        >
+                          <Send className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    )}
+                    
+                    {/* Wall posts */}
+                    {wallPosts.length === 0 ? (
+                      <p className="text-center text-muted-foreground py-8">
+                        Стена пуста
+                      </p>
+                    ) : (
+                      wallPosts.map(post => (
+                        <Card key={post.id} className="bg-secondary/30">
+                          <CardContent className="p-4">
+                            <div className="flex items-start gap-3">
+                              <Avatar className="w-10 h-10">
+                                <AvatarImage src={post.author?.avatar_url || undefined} />
+                                <AvatarFallback>
+                                  {post.author?.username?.charAt(0).toUpperCase() || 'U'}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2">
+                                  <UserNickname
+                                    username={post.author?.username || 'Unknown'}
+                                    userId={post.author_id}
+                                    role={post.authorRole}
+                                    donorTier={post.authorDonorTier}
+                                    customColor={post.authorNicknameColor}
+                                  />
+                                  <span className="text-xs text-muted-foreground">
+                                    {formatDistanceToNow(new Date(post.created_at), { addSuffix: true, locale: ru })}
+                                  </span>
+                                </div>
+                                <p className="mt-2 text-sm">{post.content}</p>
+                              </div>
+                              {(user?.id === post.author_id || user?.id === userId) && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => deleteWallPostMutation.mutate(post.id)}
+                                >
+                                  <Trash2 className="w-4 h-4 text-destructive" />
+                                </Button>
+                              )}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))
+                    )}
+                  </TabsContent>
 
                   <TabsContent value="projects" className="p-4">
                     {projects.length === 0 ? (

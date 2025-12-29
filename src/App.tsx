@@ -17,6 +17,7 @@ import UserProfile from "./pages/UserProfile";
 import Moderation from "./pages/Moderation";
 import ModerationLogs from "./pages/ModerationLogs";
 import Leaderboards from "./pages/Leaderboards";
+import Messages from "./pages/Messages";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
@@ -43,6 +44,8 @@ const App = () => (
                 <Route path="/moderation" element={<Moderation />} />
                 <Route path="/moderation/logs" element={<ModerationLogs />} />
                 <Route path="/leaderboards" element={<Leaderboards />} />
+                <Route path="/messages" element={<Messages />} />
+                <Route path="/messages/:recipientId" element={<Messages />} />
                 <Route path="/admin" element={<Admin />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
