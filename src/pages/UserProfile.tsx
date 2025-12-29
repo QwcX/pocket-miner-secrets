@@ -390,28 +390,24 @@ export default function UserProfile() {
                       customColor={donorInfo?.nickname_color}
                       asLink={false}
                       className="text-xl"
+                      showBadge
                     />
                   </div>
                   
-                  {/* Donor badge */}
-                  {donorTier !== 'none' && (
-                    <div className="mt-2">
-                      <DonorBadge tier={donorTier} />
+                  {/* Roles - show only staff roles as separate badges */}
+                  {roles.filter(r => r !== 'user' && r !== 'player').length > 0 && (
+                    <div className="flex flex-wrap justify-center gap-2 mt-3">
+                      {roles.filter(r => r !== 'user' && r !== 'player').map((role) => {
+                        const Icon = ROLE_ICONS[role];
+                        return (
+                          <Badge key={role} className={`${ROLE_COLORS[role]} gap-1`}>
+                            <Icon className="w-3 h-3" />
+                            {ROLE_LABELS[role]}
+                          </Badge>
+                        );
+                      })}
                     </div>
                   )}
-                  
-                  {/* Roles */}
-                  <div className="flex flex-wrap justify-center gap-2 mt-3">
-                    {roles.map((role) => {
-                      const Icon = ROLE_ICONS[role];
-                      return (
-                        <Badge key={role} className={`${ROLE_COLORS[role]} gap-1`}>
-                          <Icon className="w-3 h-3" />
-                          {ROLE_LABELS[role]}
-                        </Badge>
-                      );
-                    })}
-                  </div>
 
                   {profile.bio && (
                     <p className="mt-4 text-sm text-muted-foreground">{profile.bio}</p>
