@@ -6,73 +6,80 @@
 
 @layer base {
   :root {
-    --background: 220 20% 10%;
-    --foreground: 210 20% 95%;
+    --background: 0 0% 4%;
+    --foreground: 0 0% 95%;
 
-    --card: 220 18% 14%;
-    --card-foreground: 210 20% 95%;
+    --card: 0 0% 7%;
+    --card-foreground: 0 0% 95%;
 
-    --popover: 220 18% 14%;
-    --popover-foreground: 210 20% 95%;
+    --popover: 0 0% 7%;
+    --popover-foreground: 0 0% 95%;
 
     --primary: 142 70% 45%;
-    --primary-foreground: 210 20% 98%;
+    --primary-foreground: 0 0% 98%;
 
-    --secondary: 220 15% 20%;
-    --secondary-foreground: 210 20% 95%;
+    --secondary: 0 0% 12%;
+    --secondary-foreground: 0 0% 95%;
 
-    --muted: 220 15% 18%;
-    --muted-foreground: 215 15% 60%;
+    --muted: 0 0% 10%;
+    --muted-foreground: 0 0% 55%;
 
     --accent: 280 60% 50%;
-    --accent-foreground: 210 20% 98%;
+    --accent-foreground: 0 0% 98%;
 
     --destructive: 0 70% 50%;
-    --destructive-foreground: 210 20% 98%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 220 15% 22%;
-    --input: 220 15% 18%;
+    --border: 0 0% 15%;
+    --input: 0 0% 10%;
     --ring: 142 70% 45%;
 
     --radius: 0.75rem;
 
     --minecraft-green: 142 70% 45%;
-    --minecraft-dark: 220 20% 8%;
+    --minecraft-dark: 0 0% 3%;
     --minecraft-gold: 43 96% 56%;
     --minecraft-diamond: 195 90% 50%;
     --minecraft-purple: 280 60% 50%;
     --minecraft-red: 0 70% 50%;
-    --minecraft-gray: 220 10% 45%;
+    --minecraft-gray: 0 0% 45%;
 
-    --sidebar-background: 220 20% 8%;
-    --sidebar-foreground: 210 20% 95%;
+    /* Donor tier colors */
+    --donor-bronze: 30 60% 45%;
+    --donor-silver: 0 0% 70%;
+    --donor-gold: 43 96% 56%;
+    --donor-diamond: 195 90% 50%;
+    --donor-sponsor: 280 80% 60%;
+
+    --sidebar-background: 0 0% 3%;
+    --sidebar-foreground: 0 0% 95%;
     --sidebar-primary: 142 70% 45%;
-    --sidebar-primary-foreground: 210 20% 98%;
-    --sidebar-accent: 220 15% 15%;
-    --sidebar-accent-foreground: 210 20% 95%;
-    --sidebar-border: 220 15% 18%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 0 0% 10%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 0 0% 12%;
     --sidebar-ring: 142 70% 45%;
   }
 
   .dark {
-    --background: 220 20% 10%;
-    --foreground: 210 20% 95%;
-    --card: 220 18% 14%;
-    --card-foreground: 210 20% 95%;
-    --popover: 220 18% 14%;
-    --popover-foreground: 210 20% 95%;
+    --background: 0 0% 4%;
+    --foreground: 0 0% 95%;
+    --card: 0 0% 7%;
+    --card-foreground: 0 0% 95%;
+    --popover: 0 0% 7%;
+    --popover-foreground: 0 0% 95%;
     --primary: 142 70% 45%;
-    --primary-foreground: 210 20% 98%;
-    --secondary: 220 15% 20%;
-    --secondary-foreground: 210 20% 95%;
-    --muted: 220 15% 18%;
-    --muted-foreground: 215 15% 60%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 12%;
+    --secondary-foreground: 0 0% 95%;
+    --muted: 0 0% 10%;
+    --muted-foreground: 0 0% 55%;
     --accent: 280 60% 50%;
-    --accent-foreground: 210 20% 98%;
+    --accent-foreground: 0 0% 98%;
     --destructive: 0 70% 50%;
-    --destructive-foreground: 210 20% 98%;
-    --border: 220 15% 22%;
-    --input: 220 15% 18%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 15%;
+    --input: 0 0% 10%;
     --ring: 142 70% 45%;
   }
 }
@@ -132,97 +139,41 @@
   .glass-input {
     @apply bg-secondary/50 backdrop-blur-sm border-border/50;
   }
-}
 
-/* Theme: Default Dark (Minecraft green) */
-.theme-dark {
-  --background: 220 20% 10%;
-  --foreground: 210 20% 95%;
-  --card: 220 18% 14%;
-  --card-foreground: 210 20% 95%;
-  --popover: 220 18% 14%;
-  --popover-foreground: 210 20% 95%;
-  --primary: 142 70% 45%;
-  --primary-foreground: 210 20% 98%;
-  --secondary: 220 15% 20%;
-  --secondary-foreground: 210 20% 95%;
-  --muted: 220 15% 18%;
-  --muted-foreground: 215 15% 60%;
-  --accent: 280 60% 50%;
-  --accent-foreground: 210 20% 98%;
-  --border: 220 15% 22%;
-  --input: 220 15% 18%;
-  --ring: 142 70% 45%;
-}
+  /* Donor nickname colors */
+  .donor-bronze {
+    color: hsl(var(--donor-bronze));
+    text-shadow: 0 0 10px hsl(var(--donor-bronze) / 0.5);
+  }
 
-/* Theme: Glass iOS (Purple/Blue) */
-.theme-glass {
-  --background: 250 25% 8%;
-  --foreground: 210 20% 95%;
-  --card: 250 20% 12%;
-  --card-foreground: 210 20% 95%;
-  --popover: 250 20% 12%;
-  --popover-foreground: 210 20% 95%;
-  --primary: 270 80% 60%;
-  --primary-foreground: 210 20% 98%;
-  --secondary: 250 20% 18%;
-  --secondary-foreground: 210 20% 95%;
-  --muted: 250 15% 16%;
-  --muted-foreground: 250 15% 55%;
-  --accent: 200 90% 55%;
-  --accent-foreground: 210 20% 98%;
-  --border: 250 15% 22%;
-  --input: 250 15% 16%;
-  --ring: 270 80% 60%;
-}
+  .donor-silver {
+    color: hsl(var(--donor-silver));
+    text-shadow: 0 0 10px hsl(var(--donor-silver) / 0.5);
+  }
 
-.theme-glass .glass-card {
-  background: linear-gradient(135deg, hsl(var(--card) / 0.6), hsl(var(--card) / 0.3));
-  backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid hsl(var(--border) / 0.4);
-  box-shadow: 0 8px 32px hsl(var(--primary) / 0.15), inset 0 1px 0 hsl(0 0% 100% / 0.05);
-}
+  .donor-gold {
+    color: hsl(var(--donor-gold));
+    text-shadow: 0 0 10px hsl(var(--donor-gold) / 0.5);
+  }
 
-/* Theme: Midnight (Deep Blue) */
-.theme-midnight {
-  --background: 230 35% 7%;
-  --foreground: 210 20% 95%;
-  --card: 230 30% 11%;
-  --card-foreground: 210 20% 95%;
-  --popover: 230 30% 11%;
-  --popover-foreground: 210 20% 95%;
-  --primary: 210 100% 55%;
-  --primary-foreground: 210 20% 98%;
-  --secondary: 230 25% 16%;
-  --secondary-foreground: 210 20% 95%;
-  --muted: 230 20% 14%;
-  --muted-foreground: 220 15% 55%;
-  --accent: 280 70% 55%;
-  --accent-foreground: 210 20% 98%;
-  --border: 230 20% 18%;
-  --input: 230 20% 14%;
-  --ring: 210 100% 55%;
-}
+  .donor-diamond {
+    color: hsl(var(--donor-diamond));
+    text-shadow: 0 0 10px hsl(var(--donor-diamond) / 0.5);
+  }
 
-/* Theme: Forest (Green) */
-.theme-forest {
-  --background: 140 25% 7%;
-  --foreground: 140 10% 95%;
-  --card: 140 20% 11%;
-  --card-foreground: 140 10% 95%;
-  --popover: 140 20% 11%;
-  --popover-foreground: 140 10% 95%;
-  --primary: 142 70% 45%;
-  --primary-foreground: 140 10% 98%;
-  --secondary: 140 15% 16%;
-  --secondary-foreground: 140 10% 95%;
-  --muted: 140 12% 14%;
-  --muted-foreground: 140 10% 55%;
-  --accent: 80 60% 50%;
-  --accent-foreground: 140 10% 98%;
-  --border: 140 15% 18%;
-  --input: 140 12% 14%;
-  --ring: 142 70% 45%;
+  .donor-sponsor {
+    background: linear-gradient(90deg, hsl(var(--donor-sponsor)), hsl(var(--minecraft-diamond)), hsl(var(--donor-sponsor)));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: gradient-shift 3s ease infinite;
+    background-size: 200% auto;
+  }
+
+  @keyframes gradient-shift {
+    0%, 100% { background-position: 0% center; }
+    50% { background-position: 100% center; }
+  }
 }
 
 /* Custom scrollbar */

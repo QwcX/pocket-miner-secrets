@@ -66,6 +66,13 @@ export default {
           red: "hsl(var(--minecraft-red))",
           gray: "hsl(var(--minecraft-gray))",
         },
+        donor: {
+          bronze: "hsl(var(--donor-bronze))",
+          silver: "hsl(var(--donor-silver))",
+          gold: "hsl(var(--donor-gold))",
+          diamond: "hsl(var(--donor-diamond))",
+          sponsor: "hsl(var(--donor-sponsor))",
+        },
       },
       fontFamily: {
         display: ['"Press Start 2P"', 'cursive'],
