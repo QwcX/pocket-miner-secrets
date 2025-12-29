@@ -186,29 +186,25 @@ export function EmojiPicker({ onEmojiSelect, className }: EmojiPickerProps) {
 
             {Object.entries(EMOJI_CATEGORIES).map(([key, category]) => (
               <TabsContent key={key} value={key} className="m-0">
-                <ScrollArea className="h-64 sm:h-72">
-                  <div className="grid grid-cols-4 sm:grid-cols-5 gap-1 p-2">
+                <ScrollArea className="h-72">
+                  <div className="grid grid-cols-6 gap-1.5 p-2">
                     {category.emojis.map((item) => (
                       <button
                         key={item.code}
                         type="button"
                         onClick={() => handleEmojiClick(item)}
-                        className="flex items-center justify-center h-12 w-12 sm:h-14 sm:w-14 rounded-md hover:bg-secondary/80 transition-colors active:scale-95"
+                        className="flex items-center justify-center aspect-square rounded-md hover:bg-secondary/80 transition-colors active:scale-95"
                         title={item.code}
                       >
                         {isImageEmoji(item) ? (
                           <img
                             src={item.url}
                             alt={item.alt}
-                            className="w-10 h-10 sm:w-12 sm:h-12 object-contain"
+                            className="w-10 h-10 object-contain"
                             loading="lazy"
-                            onError={(e) => {
-                              // Hide broken images
-                              (e.target as HTMLImageElement).style.display = 'none';
-                            }}
                           />
                         ) : (
-                          <span className="text-2xl sm:text-3xl">{item.emoji}</span>
+                          <span className="text-2xl">{item.emoji}</span>
                         )}
                       </button>
                     ))}
