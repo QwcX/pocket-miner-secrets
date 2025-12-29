@@ -10,6 +10,8 @@ import {
   Puzzle, 
   Map, 
   Palette,
+  Package,
+  Settings,
   TrendingUp,
   Clock,
   Star,
@@ -17,6 +19,13 @@ import {
 import { Helmet } from 'react-helmet-async';
 
 const categories = [
+  { 
+    name: 'Сборки', 
+    icon: Package, 
+    href: '/browse?type=build',
+    description: 'Готовые сборки с модами и настройками',
+    color: 'bg-minecraft-red/20 text-minecraft-red border-minecraft-red/30',
+  },
   { 
     name: 'Плагины', 
     icon: Puzzle, 
@@ -45,6 +54,13 @@ const categories = [
     description: 'Текстуры, звуки и модели',
     color: 'bg-minecraft-diamond/20 text-minecraft-diamond border-minecraft-diamond/30',
   },
+  { 
+    name: 'Конфиги', 
+    icon: Settings, 
+    href: '/browse?type=config',
+    description: 'Настройки серверов и клиентов',
+    color: 'bg-minecraft-gray/20 text-minecraft-gray border-minecraft-gray/30',
+  },
 ];
 
 const Index = () => {
@@ -63,10 +79,10 @@ const Index = () => {
   return (
     <>
       <Helmet>
-        <title>MCLeak - Minecraft Плагины, Моды, Карты и Ресурспаки</title>
+        <title>TestLeak - Minecraft Сборки, Плагины, Моды, Карты</title>
         <meta 
           name="description" 
-          content="Крупнейшая платформа для обмена Minecraft контентом. Скачивайте и загружайте плагины, моды, карты и ресурспаки бесплатно." 
+          content="TestLeak - крупнейшая платформа для обмена Minecraft контентом. Скачивайте сборки, плагины, моды, карты и ресурспаки бесплатно." 
         />
       </Helmet>
 
@@ -84,11 +100,11 @@ const Index = () => {
               </Badge>
               
               <h1 className="font-display text-2xl sm:text-3xl md:text-4xl text-foreground leading-relaxed">
-                <span className="text-gradient">MCLEAK</span>
+                <span className="text-gradient">TESTLEAK</span>
               </h1>
               
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Делитесь своими плагинами, модами, картами и ресурспаками. 
+                Делитесь своими сборками, плагинами, модами, картами и ресурспаками. 
                 Скачивайте лучший контент от сообщества.
               </p>
               
@@ -112,7 +128,7 @@ const Index = () => {
         {/* Categories */}
         <section className="py-12 bg-card/50">
           <div className="container">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {categories.map((category) => (
                 <Link
                   key={category.name}
@@ -193,7 +209,7 @@ const Index = () => {
                   Готовы поделиться своим проектом?
                 </h2>
                 <p className="text-muted-foreground mb-6">
-                  Присоединяйтесь к сообществу и загружайте свои плагины, моды, карты и ресурспаки
+                  Присоединяйтесь к сообществу и загружайте свои сборки, плагины, моды, карты и ресурспаки
                 </p>
                 <Button asChild size="lg" className="bg-primary hover:bg-primary/90">
                   <Link to="/auth?mode=signup">

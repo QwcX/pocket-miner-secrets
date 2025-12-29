@@ -206,7 +206,7 @@ export default function Upload() {
   return (
     <>
       <Helmet>
-        <title>Загрузить проект | MCLeak</title>
+        <title>Загрузить проект | TestLeak</title>
       </Helmet>
 
       <Layout>

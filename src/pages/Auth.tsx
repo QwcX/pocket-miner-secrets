@@ -128,7 +128,7 @@ export default function Auth() {
   return (
     <>
       <Helmet>
-        <title>{mode === 'login' ? 'Вход' : 'Регистрация'} | MCLeak</title>
+        <title>{mode === 'login' ? 'Вход' : 'Регистрация'} | TestLeak</title>
       </Helmet>
 
       <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-background">
@@ -138,7 +138,7 @@ export default function Auth() {
           <div className="w-10 h-10 bg-primary rounded flex items-center justify-center">
             <Blocks className="w-6 h-6 text-primary-foreground" />
           </div>
-          <span className="font-display text-sm text-primary">MCLeak</span>
+          <span className="font-display text-sm text-primary">TestLeak</span>
         </Link>
 
         <Card className="relative w-full max-w-md bg-card border-border">

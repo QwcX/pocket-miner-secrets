@@ -14,6 +14,8 @@ import {
   Blocks,
   Map,
   Palette,
+  Package,
+  Settings,
   X,
 } from 'lucide-react';
 import {
@@ -28,10 +30,12 @@ import { cn } from '@/lib/utils';
 import { Helmet } from 'react-helmet-async';
 
 const contentTypes: { value: ContentType; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
+  { value: 'build', label: 'Сборки', icon: Package },
   { value: 'plugin', label: 'Плагины', icon: Puzzle },
   { value: 'mod', label: 'Моды', icon: Blocks },
   { value: 'map', label: 'Карты', icon: Map },
   { value: 'resourcepack', label: 'Ресурспаки', icon: Palette },
+  { value: 'config', label: 'Конфиги', icon: Settings },
 ];
 
 export default function Browse() {
@@ -80,11 +84,11 @@ export default function Browse() {
     <>
       <Helmet>
         <title>
-          {type ? CONTENT_TYPE_LABELS[type] : 'Каталог'} | MCLeak
+          {type ? CONTENT_TYPE_LABELS[type] : 'Каталог'} | TestLeak
         </title>
         <meta 
           name="description" 
-          content={`Скачать ${type ? CONTENT_TYPE_LABELS[type].toLowerCase() : 'плагины, моды, карты и ресурспаки'} для Minecraft бесплатно.`}
+          content={`Скачать ${type ? CONTENT_TYPE_LABELS[type].toLowerCase() : 'сборки, плагины, моды, карты и ресурспаки'} для Minecraft бесплатно.`}
         />
       </Helmet>
 

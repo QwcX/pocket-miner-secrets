@@ -58,7 +58,7 @@ export default function MyProjects() {
   return (
     <>
       <Helmet>
-        <title>Мои проекты | MCLeak</title>
+        <title>Мои проекты | TestLeak</title>
       </Helmet>
 
       <Layout>
