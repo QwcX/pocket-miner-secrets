@@ -86,31 +86,6 @@ export default function Auth() {
     }
   };
 
-  const getEmailFromUsername = async (usernameOrEmail: string): Promise<string | null> => {
-    // Check if it's already an email
-    if (usernameOrEmail.includes('@')) {
-      return usernameOrEmail;
-    }
-    
-    // Look up email by username
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('username', usernameOrEmail)
-      .single();
-    
-    if (error || !data) {
-      return null;
-    }
-    
-    // Get user email from auth (we need to use a workaround since we can't access auth.users directly)
-    // We'll use the user_id to get email from a different approach
-    // Actually, we need to store email in profiles or use a different method
-    // For now, let's query using the user id pattern
-    
-    return null; // Will need migration to store email
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
@@ -167,38 +142,64 @@ export default function Auth() {
           return;
         }
 
-        let emailToUse = formData.usernameOrEmail;
-        
-        // If not an email, look up by username
-        if (!formData.usernameOrEmail.includes('@')) {
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('email')
-            .eq('username', formData.usernameOrEmail)
-            .single();
-          
-          if (profileError || !profile?.email) {
+        const identifier = formData.usernameOrEmail.trim();
+
+        // Email login: use the regular client flow
+        if (identifier.includes('@')) {
+          const { error } = await signIn(identifier, formData.password);
+          if (error) {
             toast({
               title: 'Ошибка входа',
-              description: 'Пользователь с таким username не найден',
+              description: 'Неверный username/email или пароль',
               variant: 'destructive',
             });
-            setLoading(false);
-            return;
+          } else {
+            navigate('/');
           }
-          emailToUse = profile.email;
+          return;
         }
 
-        const { error } = await signIn(emailToUse, formData.password);
-        if (error) {
+        // Username login: do a secure server-side lookup (does NOT expose emails publicly)
+        const { data, error: fnError } = await supabase.functions.invoke('username-login', {
+          body: {
+            username: identifier,
+            password: formData.password,
+          },
+        });
+
+        if (fnError) {
           toast({
             title: 'Ошибка входа',
-            description: 'Неверный username/email или пароль',
+            description: 'Не удалось выполнить вход. Попробуйте позже.',
             variant: 'destructive',
           });
-        } else {
-          navigate('/');
+          return;
         }
+
+        if (!data?.access_token || !data?.refresh_token) {
+          toast({
+            title: 'Ошибка входа',
+            description: data?.error ?? 'Неверный username или пароль',
+            variant: 'destructive',
+          });
+          return;
+        }
+
+        const { error: setSessionError } = await supabase.auth.setSession({
+          access_token: data.access_token,
+          refresh_token: data.refresh_token,
+        });
+
+        if (setSessionError) {
+          toast({
+            title: 'Ошибка входа',
+            description: 'Не удалось сохранить сессию. Попробуйте ещё раз.',
+            variant: 'destructive',
+          });
+          return;
+        }
+
+        navigate('/');
       }
     } finally {
       setLoading(false);

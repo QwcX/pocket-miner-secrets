@@ -4,18 +4,25 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => ({
-  base: '/pocket-miner-secrets/',
-  server: {
-    host: "::",
-    port: 8080,
-  },
-  plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
+export default defineConfig(({ mode }) => {
+  // GitHub Pages serves the app from "/<repo-name>/".
+  // In Actions, GITHUB_REPOSITORY is "owner/repo".
+  const repoName = process.env.GITHUB_REPOSITORY?.split('/')[1];
+  const base = mode === 'production' && repoName ? `/${repoName}/` : '/';
+
+  return {
+    base,
+    server: {
+      host: "::",
+      port: 8080,
     },
-    // Prevent duplicate React instances (fixes "Cannot read properties of null (reading 'useState')")
-    dedupe: ["react", "react-dom"],
-  },
-}));
+    plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
+    resolve: {
+      alias: {
+        "@": path.resolve(__dirname, "./src"),
+      },
+      // Prevent duplicate React instances (fixes "Cannot read properties of null (reading 'useState')")
+      dedupe: ["react", "react-dom"],
+    },
+  };
+});
