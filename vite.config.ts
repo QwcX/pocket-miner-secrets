@@ -5,10 +5,14 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
-  // GitHub Pages serves the app from "/<repo-name>/".
-  // In Actions, GITHUB_REPOSITORY is "owner/repo".
-  const repoName = process.env.GITHUB_REPOSITORY?.split('/')[1];
-  const base = mode === 'production' && repoName ? `/${repoName}/` : '/';
+  // GitHub Pages serves:
+  // - project pages at "/<repo-name>/"
+  // - user/org pages ("<owner>.github.io") at "/"
+  const [owner, repoName] = (process.env.GITHUB_REPOSITORY ?? '').split('/');
+  const isUserOrOrgPages = !!owner && !!repoName && repoName === `${owner}.github.io`;
+  const base = mode === 'production'
+    ? (isUserOrOrgPages ? '/' : repoName ? `/${repoName}/` : '/')
+    : '/';
 
   return {
     base,
