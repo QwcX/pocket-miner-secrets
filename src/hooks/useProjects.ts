@@ -35,7 +35,23 @@ export function useProjects({ type, search, limit = 20, featured }: UseProjectsP
       const { data, error } = await query;
 
       if (error) throw error;
-      return (data || []) as Project[];
+      
+      // Fetch profiles for all authors
+      const projects = data || [];
+      if (projects.length === 0) return [];
+      
+      const authorIds = [...new Set(projects.map(p => p.author_id))];
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, username, avatar_url')
+        .in('id', authorIds);
+      
+      const profileMap = new Map((profiles || []).map(p => [p.id, p]));
+      
+      return projects.map(p => ({
+        ...p,
+        profiles: profileMap.get(p.author_id) || null
+      })) as Project[];
     },
   });
 }
@@ -82,7 +98,18 @@ export function useMyProjects(userId: string | undefined) {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return (data || []) as Project[];
+      
+      // Fetch profile for the user
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id, username, avatar_url')
+        .eq('id', userId)
+        .maybeSingle();
+      
+      return (data || []).map(p => ({
+        ...p,
+        profiles: profile || null
+      })) as Project[];
     },
     enabled: !!userId,
   });
