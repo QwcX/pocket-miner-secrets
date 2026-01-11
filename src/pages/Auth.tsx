@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Blocks, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { z } from 'zod';
 import { Helmet } from 'react-helmet-async';
+import { supabase } from '@/integrations/supabase/client';
 
 const signUpSchema = z.object({
   username: z.string().min(3, 'Минимум 3 символа').max(20, 'Максимум 20 символов').regex(/^[a-zA-Z0-9_]+$/, 'Только буквы, цифры и _'),
@@ -17,7 +18,7 @@ const signUpSchema = z.object({
 });
 
 const signInSchema = z.object({
-  email: z.string().email('Неверный формат email'),
+  usernameOrEmail: z.string().min(1, 'Введите username или email'),
   password: z.string().min(1, 'Введите пароль'),
 });
 
@@ -58,6 +59,7 @@ export default function Auth() {
   const [formData, setFormData] = useState({
     username: '',
     email: '',
+    usernameOrEmail: '',
     password: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -82,6 +84,31 @@ export default function Auth() {
     } finally {
       setGoogleLoading(false);
     }
+  };
+
+  const getEmailFromUsername = async (usernameOrEmail: string): Promise<string | null> => {
+    // Check if it's already an email
+    if (usernameOrEmail.includes('@')) {
+      return usernameOrEmail;
+    }
+    
+    // Look up email by username
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('username', usernameOrEmail)
+      .single();
+    
+    if (error || !data) {
+      return null;
+    }
+    
+    // Get user email from auth (we need to use a workaround since we can't access auth.users directly)
+    // We'll use the user_id to get email from a different approach
+    // Actually, we need to store email in profiles or use a different method
+    // For now, let's query using the user id pattern
+    
+    return null; // Will need migration to store email
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -140,11 +167,33 @@ export default function Auth() {
           return;
         }
 
-        const { error } = await signIn(formData.email, formData.password);
+        let emailToUse = formData.usernameOrEmail;
+        
+        // If not an email, look up by username
+        if (!formData.usernameOrEmail.includes('@')) {
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('email')
+            .eq('username', formData.usernameOrEmail)
+            .single();
+          
+          if (profileError || !profile?.email) {
+            toast({
+              title: 'Ошибка входа',
+              description: 'Пользователь с таким username не найден',
+              variant: 'destructive',
+            });
+            setLoading(false);
+            return;
+          }
+          emailToUse = profile.email;
+        }
+
+        const { error } = await signIn(emailToUse, formData.password);
         if (error) {
           toast({
             title: 'Ошибка входа',
-            description: 'Неверный email или пароль',
+            description: 'Неверный username/email или пароль',
             variant: 'destructive',
           });
         } else {
@@ -187,7 +236,7 @@ export default function Auth() {
             </CardTitle>
             <CardDescription>
               {mode === 'login' 
-                ? 'Введите ваши данные для входа'
+                ? 'Введите username или email для входа'
                 : 'Заполните форму для регистрации'
               }
             </CardDescription>
@@ -220,36 +269,52 @@ export default function Auth() {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              {mode === 'signup' && (
+              {mode === 'signup' ? (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="username">Имя пользователя</Label>
+                    <Input
+                      id="username"
+                      placeholder="username"
+                      value={formData.username}
+                      onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                      className={errors.username ? 'border-destructive' : ''}
+                    />
+                    {errors.username && (
+                      <p className="text-xs text-destructive">{errors.username}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="email@example.com"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      className={errors.email ? 'border-destructive' : ''}
+                    />
+                    {errors.email && (
+                      <p className="text-xs text-destructive">{errors.email}</p>
+                    )}
+                  </div>
+                </>
+              ) : (
                 <div className="space-y-2">
-                  <Label htmlFor="username">Имя пользователя</Label>
+                  <Label htmlFor="usernameOrEmail">Username или Email</Label>
                   <Input
-                    id="username"
-                    placeholder="username"
-                    value={formData.username}
-                    onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                    className={errors.username ? 'border-destructive' : ''}
+                    id="usernameOrEmail"
+                    placeholder="username или email@example.com"
+                    value={formData.usernameOrEmail}
+                    onChange={(e) => setFormData({ ...formData, usernameOrEmail: e.target.value })}
+                    className={errors.usernameOrEmail ? 'border-destructive' : ''}
                   />
-                  {errors.username && (
-                    <p className="text-xs text-destructive">{errors.username}</p>
+                  {errors.usernameOrEmail && (
+                    <p className="text-xs text-destructive">{errors.usernameOrEmail}</p>
                   )}
                 </div>
               )}
-
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="email@example.com"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className={errors.email ? 'border-destructive' : ''}
-                />
-                {errors.email && (
-                  <p className="text-xs text-destructive">{errors.email}</p>
-                )}
-              </div>
 
               <div className="space-y-2">
                 <Label htmlFor="password">Пароль</Label>
