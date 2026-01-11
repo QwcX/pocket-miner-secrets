@@ -5,8 +5,7 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
-  // Base path for GitHub Pages - replace 'your-repo-name' with your actual repo name
-base: mode === "production" ? '/pocket-miner-secrets/' : '/',
+  base: '/pocket-miner-secrets/',
   server: {
     host: "::",
     port: 8080,
