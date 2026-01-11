@@ -1,0 +1,43 @@
+name: Build and Deploy React App
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Use Node.js 18
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm install
+    
+    - name: Build the React app
+      run: npm run build
+    
+    - name: Copy build files to docs folder
+      run: |
+        rm -rf docs/*
+        cp -r dist/* docs/
+        # Create .nojekyll file to prevent Jekyll processing
+        touch docs/.nojekyll
+    
+    - name: Commit and push changes
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add docs/
+        git commit -m "Build: Update docs folder with latest build" || true
+        git push
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
