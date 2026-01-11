@@ -298,7 +298,6 @@ export type Database = {
           bio: string | null
           created_at: string | null
           discord_username: string | null
-          email: string | null
           id: string
           last_seen_at: string | null
           telegram_username: string | null
@@ -311,7 +310,6 @@ export type Database = {
           bio?: string | null
           created_at?: string | null
           discord_username?: string | null
-          email?: string | null
           id: string
           last_seen_at?: string | null
           telegram_username?: string | null
@@ -324,7 +322,6 @@ export type Database = {
           bio?: string | null
           created_at?: string | null
           discord_username?: string | null
-          email?: string | null
           id?: string
           last_seen_at?: string | null
           telegram_username?: string | null
