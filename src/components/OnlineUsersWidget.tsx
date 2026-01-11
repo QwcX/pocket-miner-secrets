@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,7 +6,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { UserNickname } from '@/components/UserNickname';
 import { useAuth } from '@/lib/auth';
 import { DonorTier, AppRole } from '@/types/database';
-import { MessageSquare, Users, Settings2 } from 'lucide-react';
+import { MessageSquare, Users, Settings2, Eye } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { Link } from 'react-router-dom';
@@ -37,8 +37,43 @@ interface RecentActivity {
 
 export function OnlineUsersWidget() {
   const { user } = useAuth();
+  const [guestCount, setGuestCount] = useState(0);
 
-  // Update online status every 30 seconds
+  // Track all visitors (including guests) using Realtime Presence
+  useEffect(() => {
+    const visitorId = user?.id || `guest_${Math.random().toString(36).substring(7)}`;
+    
+    const channel = supabase.channel('site-visitors', {
+      config: {
+        presence: {
+          key: visitorId,
+        },
+      },
+    });
+
+    channel
+      .on('presence', { event: 'sync' }, () => {
+        const state = channel.presenceState();
+        const allVisitors = Object.keys(state);
+        const guests = allVisitors.filter(id => id.startsWith('guest_'));
+        setGuestCount(guests.length);
+      })
+      .subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          await channel.track({
+            user_id: visitorId,
+            online_at: new Date().toISOString(),
+            is_guest: !user,
+          });
+        }
+      });
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
+  // Update online status every 30 seconds for authenticated users
   useEffect(() => {
     if (!user) return;
 
@@ -240,11 +275,20 @@ export function OnlineUsersWidget() {
 
       {/* Online users footer */}
       <div className="border-t border-border/50 p-3 bg-secondary/20">
-        <div className="flex items-center gap-2 mb-2">
-          <Users className="w-4 h-4 text-primary" />
-          <span className="text-sm font-medium">
-            Онлайн: {onlineUsers.length}
-          </span>
+        <div className="flex items-center gap-2 mb-2 flex-wrap">
+          <div className="flex items-center gap-2">
+            <Users className="w-4 h-4 text-primary" />
+            <span className="text-sm font-medium">
+              Пользователей: {onlineUsers.length}
+            </span>
+          </div>
+          <span className="text-muted-foreground">•</span>
+          <div className="flex items-center gap-1.5">
+            <Eye className="w-4 h-4 text-muted-foreground" />
+            <span className="text-sm text-muted-foreground">
+              Гостей: {guestCount}
+            </span>
+          </div>
         </div>
         {onlineUsers.length > 0 && (
           <div className="flex flex-wrap gap-x-2 gap-y-1 text-xs">
