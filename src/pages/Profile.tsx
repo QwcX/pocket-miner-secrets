@@ -33,6 +33,8 @@ interface ExtendedProfile {
   banner_url: string | null;
   discord_username: string | null;
   telegram_username: string | null;
+  profile_primary_color: string | null;
+  profile_accent_color: string | null;
   created_at: string | null;
   updated_at: string | null;
   last_seen_at: string | null;
@@ -49,6 +51,8 @@ export default function Profile() {
     bio: '',
     discord_username: '',
     telegram_username: '',
+    profile_primary_color: '',
+    profile_accent_color: '',
   });
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [bannerFile, setBannerFile] = useState<File | null>(null);
@@ -77,6 +81,8 @@ export default function Profile() {
         bio: profile.bio || '',
         discord_username: profile.discord_username || '',
         telegram_username: profile.telegram_username || '',
+        profile_primary_color: profile.profile_primary_color || '',
+        profile_accent_color: profile.profile_accent_color || '',
       });
     }
   }, [profile]);
@@ -92,16 +98,16 @@ export default function Profile() {
       // Upload avatar if changed
       if (avatarFile) {
         const avatarPath = `${user.id}/avatar.${avatarFile.name.split('.').pop()}`;
-        
+
         const { error: uploadError } = await supabase.storage
           .from('avatars')
           .upload(avatarPath, avatarFile, { upsert: true });
 
         if (uploadError) throw uploadError;
 
-        const { data: { publicUrl } } = supabase.storage
-          .from('avatars')
-          .getPublicUrl(avatarPath);
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from('avatars').getPublicUrl(avatarPath);
 
         avatarUrl = publicUrl;
       }
@@ -109,16 +115,16 @@ export default function Profile() {
       // Upload banner if changed
       if (bannerFile) {
         const bannerPath = `${user.id}/banner.${bannerFile.name.split('.').pop()}`;
-        
+
         const { error: uploadError } = await supabase.storage
           .from('avatars')
           .upload(bannerPath, bannerFile, { upsert: true });
 
         if (uploadError) throw uploadError;
 
-        const { data: { publicUrl } } = supabase.storage
-          .from('avatars')
-          .getPublicUrl(bannerPath);
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from('avatars').getPublicUrl(bannerPath);
 
         bannerUrl = publicUrl;
       }
@@ -132,6 +138,8 @@ export default function Profile() {
           banner_url: bannerUrl,
           discord_username: formData.discord_username || null,
           telegram_username: formData.telegram_username || null,
+          profile_primary_color: formData.profile_primary_color || null,
+          profile_accent_color: formData.profile_accent_color || null,
         })
         .eq('id', user.id);
 
@@ -146,7 +154,7 @@ export default function Profile() {
     onError: (error: Error) => {
       toast({
         title: 'Ошибка',
-        description: error.message.includes('duplicate') 
+        description: error.message.includes('duplicate')
           ? 'Это имя пользователя уже занято'
           : 'Не удалось обновить профиль',
         variant: 'destructive',
@@ -302,6 +310,85 @@ export default function Profile() {
                     rows={3}
                     className="glass-input resize-none"
                   />
+                </div>
+
+                {/* Profile colors */}
+                <div className="border-t border-border/50 pt-6">
+                  <h3 className="text-lg font-medium mb-4">Цвета профиля</h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="profile_primary_color">Primary цвет</Label>
+                      <div className="flex items-center gap-3">
+                        <Input
+                          id="profile_primary_color"
+                          type="color"
+                          value={formData.profile_primary_color || '#000000'}
+                          onChange={(e) =>
+                            setFormData({ ...formData, profile_primary_color: e.target.value })
+                          }
+                          className="h-10 w-14 p-1 glass-input"
+                          aria-label="Primary цвет"
+                        />
+                        <Input
+                          value={formData.profile_primary_color}
+                          onChange={(e) =>
+                            setFormData({ ...formData, profile_primary_color: e.target.value })
+                          }
+                          placeholder="#RRGGBB"
+                          className="glass-input"
+                          inputMode="text"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="glass-button"
+                          onClick={() => setFormData({ ...formData, profile_primary_color: '' })}
+                        >
+                          Сброс
+                        </Button>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Совет: выбери цвет с хорошим контрастом к фону, чтобы ник читался.
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="profile_accent_color">Accent цвет</Label>
+                      <div className="flex items-center gap-3">
+                        <Input
+                          id="profile_accent_color"
+                          type="color"
+                          value={formData.profile_accent_color || '#000000'}
+                          onChange={(e) =>
+                            setFormData({ ...formData, profile_accent_color: e.target.value })
+                          }
+                          className="h-10 w-14 p-1 glass-input"
+                          aria-label="Accent цвет"
+                        />
+                        <Input
+                          value={formData.profile_accent_color}
+                          onChange={(e) =>
+                            setFormData({ ...formData, profile_accent_color: e.target.value })
+                          }
+                          placeholder="#RRGGBB"
+                          className="glass-input"
+                          inputMode="text"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="glass-button"
+                          onClick={() => setFormData({ ...formData, profile_accent_color: '' })}
+                        >
+                          Сброс
+                        </Button>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Accent используется для деталей (бейджи/обводки/акценты).
+                      </p>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Social Links */}
