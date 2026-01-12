@@ -33,6 +33,13 @@ jobs:
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+
+      # Ensure GitHub Pages refresh/deep-links never show a white screen
+      # by serving the SPA shell for 404s as well.
+      - name: SPA fallback (copy index -> 404)
+        run: |
+          cp ./dist/index.html ./dist/404.html
+          touch ./dist/.nojekyll
       
       - name: Setup Pages
         uses: actions/configure-pages@v4
