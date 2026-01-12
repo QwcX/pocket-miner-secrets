@@ -56,7 +56,7 @@ export function ProjectCard({ project, rating = 0 }: ProjectCardProps) {
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-secondary to-muted">
-              <span className="font-display text-2xl text-muted-foreground opacity-50">
+              <span className="font-display text-lg sm:text-2xl text-muted-foreground opacity-50">
                 MC
               </span>
             </div>
@@ -64,42 +64,42 @@ export function ProjectCard({ project, rating = 0 }: ProjectCardProps) {
           
           {/* Premium badge */}
           {project.is_premium && (
-            <div className="absolute top-2 right-2">
-              <Badge className="bg-minecraft-gold text-background gap-1">
-                <Crown className="w-3 h-3" />
-                Premium
+            <div className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2">
+              <Badge className="bg-minecraft-gold text-background gap-1 text-[10px] sm:text-xs px-1.5 py-0.5 sm:px-2">
+                <Crown className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                <span className="hidden xs:inline">Premium</span>
               </Badge>
             </div>
           )}
           
           {/* Price badge */}
           {project.price > 0 && (
-            <div className="absolute top-2 left-2">
-              <Badge variant="outline" className="bg-background/80 text-minecraft-gold border-minecraft-gold">
+            <div className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2">
+              <Badge variant="outline" className="bg-background/80 text-minecraft-gold border-minecraft-gold text-[10px] sm:text-xs">
                 {project.price} ₽
               </Badge>
             </div>
           )}
           
           {/* Content type badge */}
-          <div className="absolute bottom-2 left-2">
-            <Badge className={cn(CONTENT_TYPE_COLORS[project.content_type])}>
+          <div className="absolute bottom-1.5 left-1.5 sm:bottom-2 sm:left-2">
+            <Badge className={cn('text-[10px] sm:text-xs px-1.5 py-0.5 sm:px-2', CONTENT_TYPE_COLORS[project.content_type])}>
               {CONTENT_TYPE_LABELS[project.content_type]}
             </Badge>
           </div>
         </div>
       </Link>
 
-      <CardContent className="p-4 space-y-3">
+      <CardContent className="p-2.5 sm:p-3 md:p-4 space-y-1.5 sm:space-y-2 md:space-y-3">
         {/* Title */}
         <Link to={`/project/${project.slug}`}>
-          <h3 className="font-semibold text-foreground line-clamp-1 group-hover:text-primary transition-colors">
+          <h3 className="font-semibold text-foreground text-sm sm:text-base line-clamp-1 group-hover:text-primary transition-colors">
             {project.title}
           </h3>
         </Link>
 
         {/* Author */}
-        <div className="flex items-center gap-1 text-sm" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center gap-1 text-xs sm:text-sm" onClick={(e) => e.stopPropagation()}>
           <span className="text-muted-foreground">от</span>
           <UserNickname 
             username={project.profiles?.username || 'Unknown'} 
@@ -107,28 +107,28 @@ export function ProjectCard({ project, rating = 0 }: ProjectCardProps) {
             role={authorInfo?.role}
             donorTier={authorInfo?.donorTier}
             customColor={authorInfo?.nicknameColor}
-            className="text-sm"
+            className="text-xs sm:text-sm"
           />
         </div>
 
-        {/* Description */}
-        <p className="text-sm text-muted-foreground line-clamp-2">
+        {/* Description - hide on very small screens */}
+        <p className="hidden xs:block text-xs sm:text-sm text-muted-foreground line-clamp-2">
           {project.description}
         </p>
 
         {/* Stats */}
-        <div className="flex items-center gap-4 text-xs text-muted-foreground">
-          <div className="flex items-center gap-1">
-            <Download className="w-3.5 h-3.5" />
+        <div className="flex items-center gap-2 sm:gap-4 text-[10px] sm:text-xs text-muted-foreground">
+          <div className="flex items-center gap-0.5 sm:gap-1">
+            <Download className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
             {formatNumber(project.downloads_count)}
           </div>
-          <div className="flex items-center gap-1">
-            <Eye className="w-3.5 h-3.5" />
+          <div className="flex items-center gap-0.5 sm:gap-1">
+            <Eye className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
             {formatNumber(project.views_count)}
           </div>
           {rating > 0 && (
-            <div className="flex items-center gap-1">
-              <Star className="w-3.5 h-3.5 fill-minecraft-gold text-minecraft-gold" />
+            <div className="flex items-center gap-0.5 sm:gap-1">
+              <Star className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-minecraft-gold text-minecraft-gold" />
               {rating.toFixed(1)}
             </div>
           )}
@@ -136,14 +136,14 @@ export function ProjectCard({ project, rating = 0 }: ProjectCardProps) {
 
         {/* Minecraft versions */}
         {project.minecraft_versions.length > 0 && (
-          <div className="flex flex-wrap gap-1">
+          <div className="hidden sm:flex flex-wrap gap-1">
             {project.minecraft_versions.slice(0, 3).map((version) => (
-              <Badge key={version} variant="outline" className="text-xs">
+              <Badge key={version} variant="outline" className="text-[10px] sm:text-xs">
                 {version}
               </Badge>
             ))}
             {project.minecraft_versions.length > 3 && (
-              <Badge variant="outline" className="text-xs">
+              <Badge variant="outline" className="text-[10px] sm:text-xs">
                 +{project.minecraft_versions.length - 3}
               </Badge>
             )}

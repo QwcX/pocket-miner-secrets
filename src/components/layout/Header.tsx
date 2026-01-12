@@ -85,19 +85,19 @@ export function Header({ snowflakesEnabled = true, onToggleSnowflakes }: HeaderP
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/50 glass-card">
-      <div className="container flex h-16 items-center justify-between">
+      <div className="container flex h-14 sm:h-16 items-center justify-between px-3 sm:px-4">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-primary rounded flex items-center justify-center">
-            <Blocks className="w-5 h-5 text-primary-foreground" />
+        <Link to="/" className="flex items-center gap-1.5 sm:gap-2">
+          <div className="w-7 h-7 sm:w-8 sm:h-8 bg-primary rounded flex items-center justify-center">
+            <Blocks className="w-4 h-4 sm:w-5 sm:h-5 text-primary-foreground" />
           </div>
-          <span className="font-display text-xs md:text-sm text-primary">
+          <span className="font-display text-[10px] sm:text-xs md:text-sm text-primary">
             TestLeak
           </span>
         </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-6">
+        <nav className="hidden lg:flex items-center gap-4 xl:gap-6">
           {categories.map((category) => (
             <Link
               key={category.name}
@@ -111,7 +111,7 @@ export function Header({ snowflakesEnabled = true, onToggleSnowflakes }: HeaderP
         </nav>
 
         {/* Search */}
-        <form onSubmit={handleSearch} className="hidden lg:flex items-center gap-2 flex-1 max-w-md mx-6">
+        <form onSubmit={handleSearch} className="hidden xl:flex items-center gap-2 flex-1 max-w-md mx-6">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
@@ -125,11 +125,13 @@ export function Header({ snowflakesEnabled = true, onToggleSnowflakes }: HeaderP
         </form>
 
         {/* Actions */}
-        <div className="flex items-center gap-2">
-          {onToggleSnowflakes && (
-            <SnowflakeToggle enabled={snowflakesEnabled} onToggle={onToggleSnowflakes} />
-          )}
-          <ThemeSwitcher />
+        <div className="flex items-center gap-1 sm:gap-2">
+          <div className="hidden sm:flex items-center gap-1">
+            {onToggleSnowflakes && (
+              <SnowflakeToggle enabled={snowflakesEnabled} onToggle={onToggleSnowflakes} />
+            )}
+            <ThemeSwitcher />
+          </div>
           
           {user ? (
             <>
@@ -139,25 +141,24 @@ export function Header({ snowflakesEnabled = true, onToggleSnowflakes }: HeaderP
                 variant="ghost"
                 size="icon"
                 onClick={() => navigate('/messages')}
-                className="glass-button"
+                className="glass-button w-8 h-8 sm:w-10 sm:h-10"
               >
-                <MessageSquare className="w-5 h-5" />
+                <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5" />
               </Button>
               
               <Button
                 variant="ghost"
-                size="sm"
+                size="icon"
                 onClick={() => navigate('/upload')}
-                className="hidden sm:flex items-center gap-2 glass-button"
+                className="hidden sm:flex glass-button w-8 h-8 sm:w-10 sm:h-10"
               >
-                <Upload className="w-4 h-4" />
-                <span className="hidden md:inline">Загрузить</span>
+                <Upload className="w-4 h-4 sm:w-5 sm:h-5" />
               </Button>
               
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="glass-button">
-                    <User className="w-5 h-5" />
+                  <Button variant="ghost" size="icon" className="glass-button w-8 h-8 sm:w-10 sm:h-10">
+                    <User className="w-4 h-4 sm:w-5 sm:h-5" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48 glass-card">
@@ -168,6 +169,10 @@ export function Header({ snowflakesEnabled = true, onToggleSnowflakes }: HeaderP
                   <DropdownMenuItem onClick={() => navigate('/my-projects')}>
                     <Blocks className="w-4 h-4 mr-2" />
                     Мои проекты
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/upload')} className="sm:hidden">
+                    <Upload className="w-4 h-4 mr-2" />
+                    Загрузить
                   </DropdownMenuItem>
                   {hasModeratorAccess && (
                     <DropdownMenuItem onClick={() => navigate('/moderation')}>
@@ -195,16 +200,17 @@ export function Header({ snowflakesEnabled = true, onToggleSnowflakes }: HeaderP
                 variant="ghost"
                 size="sm"
                 onClick={() => navigate('/auth')}
-                className="hidden sm:inline-flex"
+                className="hidden sm:inline-flex text-xs sm:text-sm"
               >
                 Войти
               </Button>
               <Button
                 size="sm"
                 onClick={() => navigate('/auth?mode=signup')}
-                className="bg-primary hover:bg-primary/90"
+                className="bg-primary hover:bg-primary/90 text-xs sm:text-sm px-2 sm:px-4"
               >
-                Регистрация
+                <span className="hidden xs:inline">Регистрация</span>
+                <span className="xs:hidden">Войти</span>
               </Button>
             </>
           )}
@@ -213,7 +219,7 @@ export function Header({ snowflakesEnabled = true, onToggleSnowflakes }: HeaderP
           <Button
             variant="ghost"
             size="icon"
-            className="md:hidden"
+            className="lg:hidden w-8 h-8 sm:w-10 sm:h-10"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -224,30 +230,38 @@ export function Header({ snowflakesEnabled = true, onToggleSnowflakes }: HeaderP
       {/* Mobile Navigation */}
       <div
         className={cn(
-          'md:hidden border-t border-border overflow-hidden transition-all duration-300',
-          mobileMenuOpen ? 'max-h-96' : 'max-h-0'
+          'lg:hidden border-t border-border overflow-hidden transition-all duration-300',
+          mobileMenuOpen ? 'max-h-[500px]' : 'max-h-0'
         )}
       >
-        <div className="container py-4 space-y-4">
+        <div className="container py-3 sm:py-4 space-y-3 sm:space-y-4 px-3 sm:px-4">
           <form onSubmit={handleSearch} className="flex items-center gap-2">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 type="search"
                 placeholder="Поиск..."
-                className="pl-10 bg-secondary border-border"
+                className="pl-10 bg-secondary border-border h-9 sm:h-10"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
           </form>
           
-          <nav className="flex flex-col gap-2">
+          {/* Mobile settings */}
+          <div className="flex items-center gap-2 sm:hidden pb-2 border-b border-border/50">
+            {onToggleSnowflakes && (
+              <SnowflakeToggle enabled={snowflakesEnabled} onToggle={onToggleSnowflakes} />
+            )}
+            <ThemeSwitcher />
+          </div>
+          
+          <nav className="grid grid-cols-2 gap-2">
             {categories.map((category) => (
               <Link
                 key={category.name}
                 to={category.href}
-                className="flex items-center gap-2 p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+                className="flex items-center gap-2 p-2.5 sm:p-3 rounded-lg text-muted-foreground hover:text-foreground bg-secondary/50 hover:bg-secondary transition-colors text-sm"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 <category.icon className="w-4 h-4" />
@@ -255,6 +269,27 @@ export function Header({ snowflakesEnabled = true, onToggleSnowflakes }: HeaderP
               </Link>
             ))}
           </nav>
+          
+          {/* Mobile quick actions when not logged in */}
+          {!user && (
+            <div className="flex gap-2 pt-2 border-t border-border/50">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => { navigate('/auth'); setMobileMenuOpen(false); }}
+                className="flex-1"
+              >
+                Войти
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => { navigate('/auth?mode=signup'); setMobileMenuOpen(false); }}
+                className="flex-1 bg-primary"
+              >
+                Регистрация
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </header>

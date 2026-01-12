@@ -93,40 +93,40 @@ export default function Browse() {
       </Helmet>
 
       <Layout>
-        <div className="container py-8">
+        <div className="container py-4 sm:py-6 md:py-8 px-3 sm:px-4">
           {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-2xl font-semibold text-foreground mb-2">
+          <div className="mb-4 sm:mb-6 md:mb-8">
+            <h1 className="text-xl sm:text-2xl font-semibold text-foreground mb-1 sm:mb-2">
               {type ? CONTENT_TYPE_LABELS[type] : 'Каталог'}
             </h1>
-            <p className="text-muted-foreground">
+            <p className="text-sm sm:text-base text-muted-foreground">
               Найдите лучший контент для Minecraft
             </p>
           </div>
 
           {/* Filters */}
-          <div className="flex flex-col lg:flex-row gap-4 mb-8">
+          <div className="flex flex-col gap-3 sm:gap-4 mb-4 sm:mb-6 md:mb-8">
             {/* Search */}
-            <form onSubmit={handleSearch} className="flex-1 max-w-xl">
+            <form onSubmit={handleSearch} className="w-full lg:max-w-xl">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   type="search"
                   placeholder="Поиск по названию или описанию..."
-                  className="pl-10 bg-card border-border"
+                  className="pl-10 bg-card border-border h-9 sm:h-10"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
             </form>
 
-            {/* Type filter */}
-            <div className="flex flex-wrap gap-2">
+            {/* Type filter - horizontal scroll on mobile */}
+            <div className="flex gap-2 overflow-x-auto pb-2 -mx-3 px-3 sm:mx-0 sm:px-0 sm:flex-wrap scrollbar-hide">
               <Button
                 variant={!type ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => handleTypeFilter('all')}
-                className={cn(!type && 'bg-primary')}
+                className={cn('shrink-0 text-xs sm:text-sm', !type && 'bg-primary')}
               >
                 Все
               </Button>
@@ -136,10 +136,10 @@ export default function Browse() {
                   variant={type === ct.value ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => handleTypeFilter(ct.value)}
-                  className={cn(type === ct.value && 'bg-primary')}
+                  className={cn('shrink-0 text-xs sm:text-sm', type === ct.value && 'bg-primary')}
                 >
-                  <ct.icon className="w-4 h-4 mr-1" />
-                  {ct.label}
+                  <ct.icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1" />
+                  <span className="hidden xs:inline">{ct.label}</span>
                 </Button>
               ))}
             </div>
@@ -147,10 +147,10 @@ export default function Browse() {
 
           {/* Active filters */}
           {hasFilters && (
-            <div className="flex flex-wrap items-center gap-2 mb-6">
-              <span className="text-sm text-muted-foreground">Фильтры:</span>
+            <div className="flex flex-wrap items-center gap-2 mb-4 sm:mb-6">
+              <span className="text-xs sm:text-sm text-muted-foreground">Фильтры:</span>
               {search && (
-                <Badge variant="secondary" className="gap-1">
+                <Badge variant="secondary" className="gap-1 text-xs">
                   Поиск: {search}
                   <button onClick={() => {
                     searchParams.delete('search');
@@ -161,14 +161,14 @@ export default function Browse() {
                   </button>
                 </Badge>
               )}
-              <Button variant="ghost" size="sm" onClick={clearFilters}>
-                Сбросить все
+              <Button variant="ghost" size="sm" onClick={clearFilters} className="text-xs sm:text-sm h-7 sm:h-8">
+                Сбросить
               </Button>
             </div>
           )}
 
           {/* Results count */}
-          <p className="text-sm text-muted-foreground mb-6">
+          <p className="text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6">
             Найдено: {projects.length} {projects.length === 1 ? 'проект' : 'проектов'}
           </p>
 

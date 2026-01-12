@@ -216,22 +216,22 @@ export function OnlineUsersWidget() {
 
   return (
     <Card className="glass-card h-full">
-      <CardHeader className="pb-3 border-b border-border/50">
+      <CardHeader className="pb-2 sm:pb-3 border-b border-border/50 p-3 sm:p-4">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-base flex items-center gap-2">
-            <MessageSquare className="w-4 h-4 text-primary" />
+          <CardTitle className="text-sm sm:text-base flex items-center gap-2">
+            <MessageSquare className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
             Активность
           </CardTitle>
           <div className="flex items-center gap-2">
-            <Settings2 className="w-4 h-4 text-muted-foreground" />
+            <Settings2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground" />
           </div>
         </div>
       </CardHeader>
       
-      <ScrollArea className="h-80">
+      <ScrollArea className="h-60 sm:h-72 md:h-80">
         <CardContent className="p-0">
           {recentActivity.length === 0 ? (
-            <div className="p-4 text-center text-muted-foreground text-sm">
+            <div className="p-4 text-center text-muted-foreground text-xs sm:text-sm">
               Нет активности
             </div>
           ) : (
@@ -239,7 +239,7 @@ export function OnlineUsersWidget() {
               {recentActivity.map((activity) => (
                 <div 
                   key={`${activity.type}-${activity.id}`}
-                  className="px-4 py-3 hover:bg-secondary/30 transition-colors"
+                  className="px-3 sm:px-4 py-2 sm:py-3 hover:bg-secondary/30 transition-colors"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
@@ -250,16 +250,16 @@ export function OnlineUsersWidget() {
                           role={activity.role}
                           donorTier={activity.donor_tier}
                           customColor={activity.nickname_color}
-                          className="text-sm font-medium"
+                          className="text-xs sm:text-sm font-medium"
                           showBadge
                         />
                         <span className="text-muted-foreground">:</span>
                       </div>
-                      <p className="text-sm text-muted-foreground mt-0.5 break-words">
+                      <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 break-words line-clamp-2">
                         {activity.content}
                       </p>
                     </div>
-                    <span className="text-[10px] text-muted-foreground whitespace-nowrap shrink-0">
+                    <span className="text-[9px] sm:text-[10px] text-muted-foreground whitespace-nowrap shrink-0">
                       {formatDistanceToNow(new Date(activity.created_at), {
                         addSuffix: false,
                         locale: ru,
@@ -274,43 +274,43 @@ export function OnlineUsersWidget() {
       </ScrollArea>
 
       {/* Online users footer */}
-      <div className="border-t border-border/50 p-3 bg-secondary/20">
-        <div className="flex items-center gap-2 mb-2 flex-wrap">
-          <div className="flex items-center gap-2">
-            <Users className="w-4 h-4 text-primary" />
-            <span className="text-sm font-medium">
-              Пользователей: {onlineUsers.length}
+      <div className="border-t border-border/50 p-2 sm:p-3 bg-secondary/20">
+        <div className="flex items-center gap-2 mb-1.5 sm:mb-2 flex-wrap text-xs sm:text-sm">
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
+            <span className="font-medium">
+              <span className="hidden xs:inline">Пользователей: </span>{onlineUsers.length}
             </span>
           </div>
           <span className="text-muted-foreground">•</span>
-          <div className="flex items-center gap-1.5">
-            <Eye className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">
-              Гостей: {guestCount}
+          <div className="flex items-center gap-1 sm:gap-1.5">
+            <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground" />
+            <span className="text-muted-foreground">
+              <span className="hidden xs:inline">Гостей: </span>{guestCount}
             </span>
           </div>
         </div>
         {onlineUsers.length > 0 && (
-          <div className="flex flex-wrap gap-x-2 gap-y-1 text-xs">
+          <div className="flex flex-wrap gap-x-1.5 sm:gap-x-2 gap-y-0.5 sm:gap-y-1 text-[10px] sm:text-xs">
             {onlineUsers.slice(0, 10).map((u, i) => (
               <span key={u.user_id} className="inline-flex items-center">
-                <span className="w-1.5 h-1.5 bg-primary rounded-full mr-1 animate-pulse" />
+                <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 bg-primary rounded-full mr-0.5 sm:mr-1 animate-pulse" />
                 <UserNickname
                   username={u.profile?.username || 'Unknown'}
                   userId={u.user_id}
                   role={u.role}
                   donorTier={u.donor_tier}
                   customColor={u.nickname_color}
-                  className="text-xs"
+                  className="text-[10px] sm:text-xs"
                 />
                 {i < Math.min(onlineUsers.length, 10) - 1 && (
-                  <span className="text-muted-foreground ml-1">,</span>
+                  <span className="text-muted-foreground ml-0.5 sm:ml-1">,</span>
                 )}
               </span>
             ))}
             {onlineUsers.length > 10 && (
               <span className="text-muted-foreground">
-                и ещё {onlineUsers.length - 10}...
+                +{onlineUsers.length - 10}
               </span>
             )}
           </div>
