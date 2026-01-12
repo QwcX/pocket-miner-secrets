@@ -211,6 +211,11 @@
   }
 
   /* Donor nickname colors */
+  .donor-iron {
+    color: hsl(0 0% 60%);
+    text-shadow: 0 0 10px hsl(0 0% 60% / 0.5);
+  }
+
   .donor-bronze {
     color: hsl(var(--donor-bronze));
     text-shadow: 0 0 10px hsl(var(--donor-bronze) / 0.5);
@@ -241,9 +246,24 @@
   }
 
   /* Role nickname colors */
+  .role-owner {
+    background: linear-gradient(90deg, hsl(0 80% 50%), hsl(30 100% 50%), hsl(0 80% 50%));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: gradient-shift 2s ease infinite;
+    background-size: 200% auto;
+    font-weight: 700;
+  }
+
   .role-admin {
     color: hsl(var(--destructive));
     text-shadow: 0 0 10px hsl(var(--destructive) / 0.5);
+  }
+
+  .role-curator {
+    color: hsl(var(--minecraft-gold));
+    text-shadow: 0 0 10px hsl(var(--minecraft-gold) / 0.5);
   }
 
   .role-moderator {
@@ -259,11 +279,6 @@
   .role-player {
     color: hsl(var(--primary));
     text-shadow: 0 0 10px hsl(var(--primary) / 0.5);
-  }
-
-  .role-curator {
-    color: hsl(var(--minecraft-gold));
-    text-shadow: 0 0 10px hsl(var(--minecraft-gold) / 0.5);
   }
 
   @keyframes gradient-shift {

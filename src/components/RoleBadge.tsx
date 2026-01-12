@@ -1,6 +1,6 @@
 import { Badge } from '@/components/ui/badge';
 import { AppRole, DonorTier, ROLE_LABELS, DONOR_TIER_LABELS } from '@/types/database';
-import { Shield, Crown, Star, Code, Gamepad2, Eye, Sparkles } from 'lucide-react';
+import { Shield, Crown, Star, Code, Gamepad2, Eye, Sparkles, Gem, Flame } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface RoleBadgeProps {
@@ -11,18 +11,20 @@ interface RoleBadgeProps {
 }
 
 const ROLE_ICONS: Record<AppRole, React.ReactNode> = {
+  owner: <Flame className="w-3 h-3" />,
   admin: <Crown className="w-3 h-3" />,
-  moderator: <Shield className="w-3 h-3" />,
   curator: <Eye className="w-3 h-3" />,
+  moderator: <Shield className="w-3 h-3" />,
   developer: <Code className="w-3 h-3" />,
   player: <Gamepad2 className="w-3 h-3" />,
   user: null,
 };
 
 const ROLE_BADGE_STYLES: Record<AppRole, string> = {
+  owner: 'bg-gradient-to-r from-red-600/30 to-orange-500/30 text-orange-400 border-orange-500/50',
   admin: 'bg-destructive/20 text-destructive border-destructive/30',
-  moderator: 'bg-sky-500/20 text-sky-400 border-sky-500/30',
   curator: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
+  moderator: 'bg-sky-500/20 text-sky-400 border-sky-500/30',
   developer: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
   player: 'bg-primary/20 text-primary border-primary/30',
   user: '',
@@ -30,6 +32,7 @@ const ROLE_BADGE_STYLES: Record<AppRole, string> = {
 
 const DONOR_ICONS: Record<DonorTier, React.ReactNode> = {
   none: null,
+  iron: <Gem className="w-3 h-3" />,
   bronze: <Star className="w-3 h-3" />,
   silver: <Star className="w-3 h-3" />,
   gold: <Star className="w-3 h-3" />,
@@ -39,6 +42,7 @@ const DONOR_ICONS: Record<DonorTier, React.ReactNode> = {
 
 const DONOR_BADGE_STYLES: Record<DonorTier, string> = {
   none: '',
+  iron: 'bg-gray-500/20 text-gray-300 border-gray-500/30',
   bronze: 'bg-orange-700/20 text-orange-400 border-orange-700/30',
   silver: 'bg-gray-400/20 text-gray-300 border-gray-400/30',
   gold: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',

@@ -43,12 +43,13 @@ import { ROLE_LABELS, ROLE_COLORS, AppRole, DonorTier } from '@/types/database';
 import { useState } from 'react';
 
 const ROLE_ICONS: Record<AppRole, typeof Crown> = {
+  owner: Crown,
   admin: Crown,
+  curator: BookMarked,
   moderator: ShieldCheck,
-  user: User,
   developer: Code,
   player: Gamepad2,
-  curator: BookMarked,
+  user: User,
 };
 
 const DISCORD_ICON = () => (
