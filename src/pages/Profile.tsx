@@ -316,6 +316,49 @@ export default function Profile() {
                 <div className="border-t border-border/50 pt-6">
                   <h3 className="text-lg font-medium mb-4">Цвета профиля</h3>
 
+                  {/* Live Preview */}
+                  <div className="mb-6 p-4 rounded-lg bg-secondary/30 border border-border/50">
+                    <p className="text-xs text-muted-foreground mb-3">Предпросмотр:</p>
+                    <div className="flex items-center gap-3">
+                      <div 
+                        className="w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold"
+                        style={{
+                          backgroundColor: formData.profile_accent_color || 'hsl(var(--secondary))',
+                          color: formData.profile_primary_color || 'hsl(var(--foreground))',
+                        }}
+                      >
+                        {formData.username?.charAt(0)?.toUpperCase() || 'U'}
+                      </div>
+                      <div>
+                        <span 
+                          className="text-xl font-bold"
+                          style={{
+                            color: formData.profile_primary_color || undefined,
+                            textShadow: formData.profile_accent_color 
+                              ? `0 0 10px ${formData.profile_accent_color}, 0 0 20px ${formData.profile_accent_color}40`
+                              : undefined,
+                          }}
+                        >
+                          {formData.username || 'Username'}
+                        </span>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span 
+                            className="text-xs px-2 py-0.5 rounded-full"
+                            style={{
+                              backgroundColor: formData.profile_accent_color 
+                                ? `${formData.profile_accent_color}30` 
+                                : 'hsl(var(--primary) / 0.2)',
+                              color: formData.profile_primary_color || 'hsl(var(--primary))',
+                              border: `1px solid ${formData.profile_accent_color || 'hsl(var(--primary) / 0.3)'}`,
+                            }}
+                          >
+                            Пример бейджа
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="profile_primary_color">Primary цвет</Label>
@@ -327,7 +370,7 @@ export default function Profile() {
                           onChange={(e) =>
                             setFormData({ ...formData, profile_primary_color: e.target.value })
                           }
-                          className="h-10 w-14 p-1 glass-input"
+                          className="h-10 w-14 p-1 glass-input cursor-pointer"
                           aria-label="Primary цвет"
                         />
                         <Input
@@ -349,7 +392,7 @@ export default function Profile() {
                         </Button>
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        Совет: выбери цвет с хорошим контрастом к фону, чтобы ник читался.
+                        Основной цвет ника и текста.
                       </p>
                     </div>
 
@@ -363,7 +406,7 @@ export default function Profile() {
                           onChange={(e) =>
                             setFormData({ ...formData, profile_accent_color: e.target.value })
                           }
-                          className="h-10 w-14 p-1 glass-input"
+                          className="h-10 w-14 p-1 glass-input cursor-pointer"
                           aria-label="Accent цвет"
                         />
                         <Input
@@ -385,7 +428,7 @@ export default function Profile() {
                         </Button>
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        Accent используется для деталей (бейджи/обводки/акценты).
+                        Свечение, обводки и фон бейджей.
                       </p>
                     </div>
                   </div>
