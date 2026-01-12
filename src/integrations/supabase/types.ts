@@ -77,6 +77,36 @@ export type Database = {
           },
         ]
       }
+      emojis: {
+        Row: {
+          category: string | null
+          created_at: string
+          id: string
+          image_url: string
+          is_animated: boolean | null
+          shortcode: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          image_url: string
+          is_animated?: boolean | null
+          shortcode: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string
+          is_animated?: boolean | null
+          shortcode?: string
+          uploaded_by?: string | null
+        }
+        Relationships: []
+      }
       favorites: {
         Row: {
           created_at: string | null
@@ -300,6 +330,8 @@ export type Database = {
           discord_username: string | null
           id: string
           last_seen_at: string | null
+          profile_accent_color: string | null
+          profile_primary_color: string | null
           telegram_username: string | null
           updated_at: string | null
           username: string
@@ -312,6 +344,8 @@ export type Database = {
           discord_username?: string | null
           id: string
           last_seen_at?: string | null
+          profile_accent_color?: string | null
+          profile_primary_color?: string | null
           telegram_username?: string | null
           updated_at?: string | null
           username: string
@@ -324,6 +358,8 @@ export type Database = {
           discord_username?: string | null
           id?: string
           last_seen_at?: string | null
+          profile_accent_color?: string | null
+          profile_primary_color?: string | null
           telegram_username?: string | null
           updated_at?: string | null
           username?: string
@@ -567,9 +603,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_donor_priority: {
+        Args: { tier: Database["public"]["Enums"]["donor_tier"] }
+        Returns: number
+      }
       get_project_rating: { Args: { project_uuid: string }; Returns: number }
       get_project_rating_count: {
         Args: { project_uuid: string }
+        Returns: number
+      }
+      get_role_priority: {
+        Args: { role_name: Database["public"]["Enums"]["app_role"] }
         Returns: number
       }
       get_user_donor_tier: {
@@ -577,6 +621,13 @@ export type Database = {
         Returns: Database["public"]["Enums"]["donor_tier"]
       }
       get_user_reputation: { Args: { user_uuid: string }; Returns: number }
+      has_higher_role: {
+        Args: {
+          _target_role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -593,6 +644,7 @@ export type Database = {
         | "developer"
         | "player"
         | "curator"
+        | "owner"
       content_type:
         | "plugin"
         | "mod"
@@ -600,7 +652,14 @@ export type Database = {
         | "resourcepack"
         | "build"
         | "config"
-      donor_tier: "none" | "bronze" | "silver" | "gold" | "diamond" | "sponsor"
+      donor_tier:
+        | "none"
+        | "bronze"
+        | "silver"
+        | "gold"
+        | "diamond"
+        | "sponsor"
+        | "iron"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -735,9 +794,18 @@ export const Constants = {
         "developer",
         "player",
         "curator",
+        "owner",
       ],
       content_type: ["plugin", "mod", "map", "resourcepack", "build", "config"],
-      donor_tier: ["none", "bronze", "silver", "gold", "diamond", "sponsor"],
+      donor_tier: [
+        "none",
+        "bronze",
+        "silver",
+        "gold",
+        "diamond",
+        "sponsor",
+        "iron",
+      ],
     },
   },
 } as const

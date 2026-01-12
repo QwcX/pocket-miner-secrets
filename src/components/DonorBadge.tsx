@@ -1,5 +1,5 @@
 import { Badge } from '@/components/ui/badge';
-import { Crown, Diamond, Star, Award, Sparkles } from 'lucide-react';
+import { Crown, Diamond, Star, Award, Sparkles, Gem } from 'lucide-react';
 import { DonorTier, DONOR_TIER_LABELS, DONOR_TIER_COLORS } from '@/types/database';
 import { cn } from '@/lib/utils';
 
@@ -12,6 +12,7 @@ interface DonorBadgeProps {
 
 const TIER_ICONS: Record<DonorTier, typeof Crown | null> = {
   none: null,
+  iron: Gem,
   bronze: Award,
   silver: Star,
   gold: Crown,

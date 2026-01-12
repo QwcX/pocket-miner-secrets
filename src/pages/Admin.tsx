@@ -55,12 +55,13 @@ import { ru } from 'date-fns/locale';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 const ROLE_ICONS: Record<AppRole, typeof Crown> = {
+  owner: Crown,
   admin: Crown,
+  curator: BookMarked,
   moderator: ShieldCheck,
-  user: User,
   developer: Code,
   player: Gamepad2,
-  curator: BookMarked,
+  user: User,
 };
 
 interface UserWithRoles {
