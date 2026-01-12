@@ -372,27 +372,63 @@ export default function UserProfile() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Left sidebar - Profile card */}
             <div className="space-y-4">
-              <Card className="glass-card overflow-hidden">
+              <Card 
+                className="glass-card overflow-hidden"
+                style={{
+                  borderColor: profile.profile_accent_color || undefined,
+                  boxShadow: profile.profile_accent_color 
+                    ? `0 0 20px ${profile.profile_accent_color}40` 
+                    : undefined,
+                }}
+              >
                 {/* Avatar section */}
                 <div className="p-6 text-center">
-                  <Avatar className="w-32 h-32 mx-auto border-4 border-primary/30 shadow-lg shadow-primary/20">
+                  <Avatar 
+                    className="w-32 h-32 mx-auto border-4 shadow-lg"
+                    style={{
+                      borderColor: profile.profile_accent_color || 'hsl(var(--primary) / 0.3)',
+                      boxShadow: profile.profile_accent_color 
+                        ? `0 0 20px ${profile.profile_accent_color}60`
+                        : undefined,
+                    }}
+                  >
                     <AvatarImage src={profile.avatar_url || undefined} />
-                    <AvatarFallback className="bg-secondary text-4xl">
+                    <AvatarFallback 
+                      className="text-4xl"
+                      style={{
+                        backgroundColor: profile.profile_accent_color 
+                          ? `${profile.profile_accent_color}30` 
+                          : 'hsl(var(--secondary))',
+                        color: profile.profile_primary_color || undefined,
+                      }}
+                    >
                       {profile.username?.charAt(0).toUpperCase() || 'U'}
                     </AvatarFallback>
                   </Avatar>
                   
                   <div className="mt-4">
-                    <UserNickname
-                      username={profile.username}
-                      userId={userId!}
-                      role={primaryRole}
-                      donorTier={donorTier}
-                      customColor={donorInfo?.nickname_color}
-                      asLink={false}
-                      className="text-xl"
-                      showBadge
-                    />
+                    <span 
+                      className="text-xl font-bold"
+                      style={{
+                        color: profile.profile_primary_color || undefined,
+                        textShadow: profile.profile_accent_color 
+                          ? `0 0 10px ${profile.profile_accent_color}, 0 0 20px ${profile.profile_accent_color}40`
+                          : undefined,
+                      }}
+                    >
+                      {profile.username}
+                    </span>
+                    <div className="mt-1">
+                      <UserNickname
+                        username=""
+                        userId={userId!}
+                        role={primaryRole}
+                        donorTier={donorTier}
+                        customColor={donorInfo?.nickname_color || profile.profile_primary_color}
+                        asLink={false}
+                        showBadge
+                      />
+                    </div>
                   </div>
                   
                   {/* Roles - show only staff roles as separate badges */}
@@ -515,26 +551,37 @@ export default function UserProfile() {
             {/* Right content */}
             <div className="lg:col-span-2 space-y-4">
               {/* Banner */}
-              <Card className="glass-card overflow-hidden">
+              <Card 
+                className="glass-card overflow-hidden"
+                style={{
+                  borderColor: profile.profile_accent_color || undefined,
+                }}
+              >
                 <div 
-                  className="h-48 bg-gradient-to-br from-primary/30 via-accent/20 to-minecraft-diamond/30"
+                  className="h-48"
                   style={profile.banner_url ? {
                     backgroundImage: `url(${profile.banner_url})`,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
-                  } : {}}
+                  } : {
+                    background: profile.profile_accent_color 
+                      ? `linear-gradient(135deg, ${profile.profile_accent_color}40, ${profile.profile_primary_color || profile.profile_accent_color}20, ${profile.profile_accent_color}30)`
+                      : 'linear-gradient(135deg, hsl(var(--primary) / 0.3), hsl(var(--accent) / 0.2), hsl(var(--primary) / 0.3))',
+                  }}
                 >
                   <div className="w-full h-full bg-gradient-to-t from-card/80 to-transparent flex items-end">
                     <div className="p-6">
-                      <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
-                        <UserNickname
-                          username={profile.username}
-                          userId={userId!}
-                          role={primaryRole}
-                          donorTier={donorTier}
-                          customColor={donorInfo?.nickname_color}
-                          asLink={false}
-                        />
+                      <h2 className="text-2xl font-bold flex items-center gap-2">
+                        <span
+                          style={{
+                            color: profile.profile_primary_color || 'hsl(var(--foreground))',
+                            textShadow: profile.profile_accent_color 
+                              ? `0 0 10px ${profile.profile_accent_color}, 0 0 20px ${profile.profile_accent_color}50`
+                              : undefined,
+                          }}
+                        >
+                          {profile.username}
+                        </span>
                         {donorTier !== 'none' && <DonorBadge tier={donorTier} showLabel={false} />}
                       </h2>
                     </div>

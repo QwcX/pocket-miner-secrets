@@ -316,6 +316,49 @@ export default function Profile() {
                 <div className="border-t border-border/50 pt-6">
                   <h3 className="text-lg font-medium mb-4">Цвета профиля</h3>
 
+                  {/* Color Presets */}
+                  <div className="mb-4">
+                    <p className="text-sm text-muted-foreground mb-2">Быстрые пресеты:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        { name: 'Золотой', primary: '#FFD700', accent: '#FFA500' },
+                        { name: 'Алмазный', primary: '#00D9FF', accent: '#0099CC' },
+                        { name: 'Неоновый', primary: '#FF00FF', accent: '#00FF00' },
+                        { name: 'Рубиновый', primary: '#E31B5F', accent: '#8B0000' },
+                        { name: 'Изумрудный', primary: '#50C878', accent: '#228B22' },
+                        { name: 'Аметист', primary: '#9966CC', accent: '#663399' },
+                        { name: 'Огненный', primary: '#FF4500', accent: '#FF6347' },
+                        { name: 'Ледяной', primary: '#87CEEB', accent: '#4682B4' },
+                        { name: 'Минимал', primary: '', accent: '' },
+                      ].map((preset) => (
+                        <Button
+                          key={preset.name}
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="text-xs"
+                          style={{
+                            borderColor: preset.accent || undefined,
+                            color: preset.primary || undefined,
+                          }}
+                          onClick={() => setFormData({ 
+                            ...formData, 
+                            profile_primary_color: preset.primary,
+                            profile_accent_color: preset.accent 
+                          })}
+                        >
+                          {preset.primary && (
+                            <span 
+                              className="w-3 h-3 rounded-full mr-1.5" 
+                              style={{ backgroundColor: preset.primary }}
+                            />
+                          )}
+                          {preset.name}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+
                   {/* Live Preview */}
                   <div className="mb-6 p-4 rounded-lg bg-secondary/30 border border-border/50">
                     <p className="text-xs text-muted-foreground mb-3">Предпросмотр:</p>
