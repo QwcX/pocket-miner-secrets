@@ -35,6 +35,7 @@ jobs:
           # These are publishable/public values.
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL || 'https://iqrbqygekyfgfcwoiavs.supabase.co' }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlxcmJxeWdla3lmZ2Zjd29pYXZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcwMDMwNjgsImV4cCI6MjA4MjU3OTA2OH0.o81xcjLsEPkcrtpVh5BhXuB_DsL1Ugzs6IMghZ7_Tcw' }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
 
       # Ensure GitHub Pages refresh/deep-links never show a white screen
       # by serving the SPA shell for 404s as well.

@@ -28,6 +28,10 @@
 
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <!-- Dynamic base path for GitHub Pages compatibility -->
+    <script>
+      window.__BASE__ = document.querySelector('base')?.getAttribute('href') || '/';
+    </script>
+    <script type="module" src="./src/main.tsx"></script>
   </body>
 </html>
