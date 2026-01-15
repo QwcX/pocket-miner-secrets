@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { DonorTier, AppRole, DONOR_TIER_NICK_CLASSES } from '@/types/database';
 import { RoleBadge } from '@/components/RoleBadge';
 import { cn } from '@/lib/utils';
+import { hexToHslChannels } from '@/lib/color';
 
 interface UserNicknameProps {
   username: string;
@@ -9,20 +10,24 @@ interface UserNicknameProps {
   donorTier?: DonorTier;
   role?: AppRole;
   customColor?: string | null;
+  profilePrimaryColor?: string | null;
+  profileAccentColor?: string | null;
   className?: string;
   asLink?: boolean;
   showBadge?: boolean;
 }
 
-export function UserNickname({ 
-  username, 
-  userId, 
-  donorTier = 'none', 
+export function UserNickname({
+  username,
+  userId,
+  donorTier = 'none',
   role = 'user',
   customColor,
+  profilePrimaryColor,
+  profileAccentColor,
   className,
   asLink = true,
-  showBadge = false
+  showBadge = false,
 }: UserNicknameProps) {
   // Priority order (highest to lowest):
   // 1. Admin (red) - staff
@@ -33,9 +38,9 @@ export function UserNickname({
   // 6. Player (green)
   // 7. User with donor tier
   // 8. User (default green)
-  
+
   let nickClass = '';
-  
+
   // Staff roles ALWAYS take priority over donor tiers
   if (role === 'admin') {
     nickClass = 'role-admin';
@@ -54,8 +59,26 @@ export function UserNickname({
     // Default green for regular users
     nickClass = 'text-primary';
   }
-  
-  const style = customColor ? { color: customColor, textShadow: `0 0 10px ${customColor}` } : undefined;
+
+  const isStaff =
+    role === 'admin' || role === 'moderator' || role === 'curator' || role === 'developer';
+
+  // Only apply profile palette preview when it's a regular user (no staff/donor override)
+  const shouldUseProfilePalette =
+    !customColor && !isStaff && donorTier === 'none' && (!!profilePrimaryColor || !!profileAccentColor);
+
+  const donorHsl = hexToHslChannels(customColor);
+  const primaryHsl = shouldUseProfilePalette ? hexToHslChannels(profilePrimaryColor) : null;
+  const accentHsl = shouldUseProfilePalette ? hexToHslChannels(profileAccentColor) : null;
+
+  const glowHsl = donorHsl || accentHsl || primaryHsl;
+
+  const style = glowHsl
+    ? {
+        color: `hsl(${donorHsl || primaryHsl || glowHsl})`,
+        textShadow: `0 0 10px hsl(${glowHsl} / 0.9), 0 0 20px hsl(${glowHsl} / 0.35)`,
+      }
+    : undefined;
 
   const nicknameElement = (
     <span 

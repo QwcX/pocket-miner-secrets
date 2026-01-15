@@ -474,6 +474,8 @@ export default function Project() {
                                 role={c.user_role}
                                 donorTier={c.donor_tier}
                                 customColor={c.nickname_color}
+                                profilePrimaryColor={c.profiles?.profile_primary_color}
+                                profileAccentColor={c.profiles?.profile_accent_color}
                               />
                               {c.donor_tier && c.donor_tier !== 'none' && (
                                 <DonorBadge tier={c.donor_tier} size="sm" />

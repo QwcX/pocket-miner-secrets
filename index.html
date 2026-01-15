@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>TestLeak — Minecraft сборки, плагины, моды</title>
+    <meta
+      name="description"
+      content="TestLeak — платформа для обмена Minecraft контентом: сборки, плагины, моды, карты и другое."
+    />
+
+    <meta property="og:title" content="TestLeak — Minecraft контент" />
+    <meta
+      property="og:description"
+      content="Скачивайте и делитесь сборками, плагинами, модами для Minecraft."
+    />
+    <meta property="og:type" content="website" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <!-- GitHub Pages SPA redirect handler -->
+    <script>
+      (function () {
+        var redirect = sessionStorage.getItem('redirect');
+        if (redirect) {
+          sessionStorage.removeItem('redirect');
+          window.history.replaceState(null, null, redirect);
+        }
+      })();
+    </script>
+  </head>
+
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

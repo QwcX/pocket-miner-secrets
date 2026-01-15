@@ -12,6 +12,8 @@ interface OnlineUser {
   last_ping: string;
   profile?: {
     username: string;
+    profile_primary_color?: string | null;
+    profile_accent_color?: string | null;
   };
   role?: AppRole;
   donor_tier?: DonorTier;
@@ -57,7 +59,10 @@ export function OnlineUsers() {
       const userIds = online.map(u => u.user_id);
 
       const [profilesRes, rolesRes, donorsRes] = await Promise.all([
-        supabase.from('profiles').select('id, username').in('id', userIds),
+        supabase
+          .from('profiles')
+          .select('id, username, profile_primary_color, profile_accent_color')
+          .in('id', userIds),
         supabase.from('user_roles').select('user_id, role').in('user_id', userIds),
         supabase.from('user_donors').select('user_id, tier, nickname_color').in('user_id', userIds),
       ]);
@@ -104,6 +109,8 @@ export function OnlineUsers() {
                 role={u.role}
                 donorTier={u.donor_tier}
                 customColor={u.nickname_color}
+                profilePrimaryColor={u.profile?.profile_primary_color}
+                profileAccentColor={u.profile?.profile_accent_color}
               />
               {i < onlineUsers.length - 1 && <span className="text-muted-foreground">,</span>}
             </span>

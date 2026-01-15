@@ -202,7 +202,10 @@ export default function UserProfile() {
       
       const authorIds = [...new Set(posts.map(p => p.author_id))];
       const [profilesRes, rolesRes, donorsRes] = await Promise.all([
-        supabase.from('profiles').select('id, username, avatar_url').in('id', authorIds),
+        supabase
+          .from('profiles')
+          .select('id, username, avatar_url, profile_primary_color, profile_accent_color')
+          .in('id', authorIds),
         supabase.from('user_roles').select('user_id, role').in('user_id', authorIds),
         supabase.from('user_donors').select('user_id, tier, nickname_color').in('user_id', authorIds),
       ]);
@@ -683,6 +686,8 @@ export default function UserProfile() {
                                     role={post.authorRole}
                                     donorTier={post.authorDonorTier}
                                     customColor={post.authorNicknameColor}
+                                    profilePrimaryColor={post.author?.profile_primary_color}
+                                    profileAccentColor={post.author?.profile_accent_color}
                                   />
                                   <span className="text-xs text-muted-foreground">
                                     {formatDistanceToNow(new Date(post.created_at), { addSuffix: true, locale: ru })}
