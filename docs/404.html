@@ -1,24 +1,34 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Redirecting...</title>
-  <script>
-    // Single Page Apps for GitHub Pages
-    // This script redirects all 404s to index.html for client-side routing
-    const path = window.location.pathname;
-    const search = window.location.search;
-    const hash = window.location.hash;
-    
-    // Store the path in sessionStorage so we can restore it after redirect
-    sessionStorage.setItem('redirect', path + search + hash);
-    
-    // Redirect to the root
-    window.location.replace(window.location.origin + window.location.pathname.split('/').slice(0, 2).join('/') + '/');
-  </script>
-</head>
-<body>
-  <p>Redirecting...</p>
-</body>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TestLeak - Redirecting...</title>
+    <script>
+      // GitHub Pages SPA fallback
+      // Redirects all 404s to index.html with the original path stored in sessionStorage
+      (function() {
+        var l = window.location;
+        var pathSegments = l.pathname.split('/').filter(Boolean);
+        
+        // Check if this is a user/org page (username.github.io) or project page
+        var isUserPage = l.hostname.endsWith('.github.io') && 
+                         l.hostname.split('.')[0] + '.github.io' === l.hostname &&
+                         !pathSegments[0]; // root of user page
+        
+        var pathSegmentsToKeep = isUserPage ? 0 : 1; // keep repo name for project pages
+        
+        var basePath = '/' + pathSegments.slice(0, pathSegmentsToKeep).join('/');
+        if (basePath !== '/' && !basePath.endsWith('/')) basePath += '/';
+        
+        var remainingPath = '/' + pathSegments.slice(pathSegmentsToKeep).join('/') + l.search + l.hash;
+        
+        sessionStorage.setItem('redirect', remainingPath);
+        l.replace(l.origin + basePath);
+      })();
+    </script>
+  </head>
+  <body>
+    <p style="font-family: system-ui, sans-serif; text-align: center; margin-top: 100px;">Перенаправление...</p>
+  </body>
 </html>
