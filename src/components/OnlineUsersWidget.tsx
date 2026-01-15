@@ -16,6 +16,8 @@ interface OnlineUser {
   last_ping: string;
   profile?: {
     username: string;
+    profile_primary_color?: string | null;
+    profile_accent_color?: string | null;
   };
   role?: AppRole;
   donor_tier?: DonorTier;
@@ -33,6 +35,8 @@ interface RecentActivity {
   role?: AppRole;
   donor_tier?: DonorTier;
   nickname_color?: string | null;
+  profile_primary_color?: string | null;
+  profile_accent_color?: string | null;
 }
 
 export function OnlineUsersWidget() {
@@ -108,7 +112,10 @@ export function OnlineUsersWidget() {
       const userIds = online.map(u => u.user_id);
 
       const [profilesRes, rolesRes, donorsRes] = await Promise.all([
-        supabase.from('profiles').select('id, username').in('id', userIds),
+        supabase
+          .from('profiles')
+          .select('id, username, profile_primary_color, profile_accent_color')
+          .in('id', userIds),
         supabase.from('user_roles').select('user_id, role').in('user_id', userIds),
         supabase.from('user_donors').select('user_id, tier, nickname_color').in('user_id', userIds),
       ]);
@@ -160,7 +167,10 @@ export function OnlineUsersWidget() {
       if (userIdsArr.length === 0) return [];
 
       const [profilesRes, rolesRes, donorsRes] = await Promise.all([
-        supabase.from('profiles').select('id, username').in('id', userIdsArr),
+        supabase
+          .from('profiles')
+          .select('id, username, profile_primary_color, profile_accent_color')
+          .in('id', userIdsArr),
         supabase.from('user_roles').select('user_id, role').in('user_id', userIdsArr),
         supabase.from('user_donors').select('user_id, tier, nickname_color').in('user_id', userIdsArr),
       ]);
@@ -179,31 +189,37 @@ export function OnlineUsersWidget() {
       const activities: RecentActivity[] = [];
 
       (commentsRes.data || []).forEach(c => {
+        const p = profileMap.get(c.user_id);
         activities.push({
           id: c.id,
           type: 'comment',
           user_id: c.user_id,
-          username: profileMap.get(c.user_id)?.username || 'Unknown',
+          username: p?.username || 'Unknown',
           content: c.content.substring(0, 80) + (c.content.length > 80 ? '...' : ''),
           created_at: c.created_at,
           role: roleMap.get(c.user_id) || 'user',
           donor_tier: (donorMap.get(c.user_id)?.tier as DonorTier) || 'none',
           nickname_color: donorMap.get(c.user_id)?.nickname_color || null,
+          profile_primary_color: p?.profile_primary_color || null,
+          profile_accent_color: p?.profile_accent_color || null,
         });
       });
 
       (wallPostsRes.data || []).forEach(w => {
+        const p = profileMap.get(w.author_id);
         activities.push({
           id: w.id,
           type: 'wall_post',
           user_id: w.author_id,
-          username: profileMap.get(w.author_id)?.username || 'Unknown',
+          username: p?.username || 'Unknown',
           content: w.content.substring(0, 80) + (w.content.length > 80 ? '...' : ''),
           link: `/user/${w.profile_id}`,
           created_at: w.created_at,
           role: roleMap.get(w.author_id) || 'user',
           donor_tier: (donorMap.get(w.author_id)?.tier as DonorTier) || 'none',
           nickname_color: donorMap.get(w.author_id)?.nickname_color || null,
+          profile_primary_color: p?.profile_primary_color || null,
+          profile_accent_color: p?.profile_accent_color || null,
         });
       });
 
@@ -250,6 +266,8 @@ export function OnlineUsersWidget() {
                           role={activity.role}
                           donorTier={activity.donor_tier}
                           customColor={activity.nickname_color}
+                          profilePrimaryColor={activity.profile_primary_color}
+                          profileAccentColor={activity.profile_accent_color}
                           className="text-xs sm:text-sm font-medium"
                           showBadge
                         />
@@ -301,6 +319,8 @@ export function OnlineUsersWidget() {
                   role={u.role}
                   donorTier={u.donor_tier}
                   customColor={u.nickname_color}
+                  profilePrimaryColor={u.profile?.profile_primary_color}
+                  profileAccentColor={u.profile?.profile_accent_color}
                   className="text-[10px] sm:text-xs"
                 />
                 {i < Math.min(onlineUsers.length, 10) - 1 && (
