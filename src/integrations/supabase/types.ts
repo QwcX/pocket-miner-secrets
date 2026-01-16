@@ -331,6 +331,7 @@ export type Database = {
           id: string
           last_seen_at: string | null
           profile_accent_color: string | null
+          profile_emoji: string | null
           profile_primary_color: string | null
           telegram_username: string | null
           updated_at: string | null
@@ -345,6 +346,7 @@ export type Database = {
           id: string
           last_seen_at?: string | null
           profile_accent_color?: string | null
+          profile_emoji?: string | null
           profile_primary_color?: string | null
           telegram_username?: string | null
           updated_at?: string | null
@@ -359,6 +361,7 @@ export type Database = {
           id?: string
           last_seen_at?: string | null
           profile_accent_color?: string | null
+          profile_emoji?: string | null
           profile_primary_color?: string | null
           telegram_username?: string | null
           updated_at?: string | null
@@ -467,6 +470,33 @@ export type Database = {
           title?: string
           updated_at?: string | null
           views_count?: number | null
+        }
+        Relationships: []
+      }
+      rate_limits: {
+        Row: {
+          action_type: string
+          count: number | null
+          created_at: string | null
+          id: string
+          identifier: string
+          window_start: string | null
+        }
+        Insert: {
+          action_type: string
+          count?: number | null
+          created_at?: string | null
+          id?: string
+          identifier: string
+          window_start?: string | null
+        }
+        Update: {
+          action_type?: string
+          count?: number | null
+          created_at?: string | null
+          id?: string
+          identifier?: string
+          window_start?: string | null
         }
         Relationships: []
       }
@@ -603,6 +633,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_customize_nickname: { Args: { p_user_id: string }; Returns: boolean }
+      can_set_profile_emoji: { Args: { p_user_id: string }; Returns: boolean }
+      check_rate_limit: {
+        Args: {
+          p_action_type: string
+          p_identifier: string
+          p_max_requests?: number
+          p_window_seconds?: number
+        }
+        Returns: boolean
+      }
       get_donor_priority: {
         Args: { tier: Database["public"]["Enums"]["donor_tier"] }
         Returns: number
@@ -660,6 +701,7 @@ export type Database = {
         | "diamond"
         | "sponsor"
         | "iron"
+        | "emerald"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -805,6 +847,7 @@ export const Constants = {
         "diamond",
         "sponsor",
         "iron",
+        "emerald",
       ],
     },
   },

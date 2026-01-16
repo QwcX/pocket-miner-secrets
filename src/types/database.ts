@@ -1,6 +1,6 @@
 export type ContentType = 'plugin' | 'mod' | 'map' | 'resourcepack' | 'build' | 'config';
 export type AppRole = 'owner' | 'admin' | 'curator' | 'moderator' | 'developer' | 'player' | 'user';
-export type DonorTier = 'none' | 'iron' | 'bronze' | 'silver' | 'gold' | 'diamond' | 'sponsor';
+export type DonorTier = 'none' | 'iron' | 'bronze' | 'silver' | 'gold' | 'diamond' | 'emerald' | 'sponsor';
 
 export interface Profile {
   id: string;
@@ -12,6 +12,7 @@ export interface Profile {
   telegram_username: string | null;
   profile_primary_color: string | null;
   profile_accent_color: string | null;
+  profile_emoji: string | null;
   last_seen_at: string | null;
   created_at: string;
   updated_at: string;
@@ -163,9 +164,10 @@ export const ROLE_COLORS: Record<AppRole, string> = {
   user: 'bg-muted text-muted-foreground',
 };
 
-// Donor tier hierarchy: Sponsor > Diamond > Gold > Silver > Iron > Bronze > None
+// Donor tier hierarchy: Sponsor > Emerald > Diamond > Gold > Silver > Iron > Bronze > None
 export const DONOR_PRIORITY: Record<DonorTier, number> = {
-  sponsor: 60,
+  sponsor: 70,
+  emerald: 60,
   diamond: 50,
   gold: 40,
   silver: 30,
@@ -181,6 +183,7 @@ export const DONOR_TIER_LABELS: Record<DonorTier, string> = {
   silver: 'Silver',
   gold: 'Gold',
   diamond: 'Diamond',
+  emerald: 'Emerald',
   sponsor: 'Sponsor',
 };
 
@@ -191,6 +194,7 @@ export const DONOR_TIER_COLORS: Record<DonorTier, string> = {
   silver: 'bg-donor-silver text-background',
   gold: 'bg-donor-gold text-background',
   diamond: 'bg-donor-diamond text-background',
+  emerald: 'bg-donor-emerald text-background',
   sponsor: 'bg-donor-sponsor text-background',
 };
 
@@ -201,8 +205,21 @@ export const DONOR_TIER_NICK_CLASSES: Record<DonorTier, string> = {
   silver: 'donor-silver',
   gold: 'donor-gold',
   diamond: 'donor-diamond',
+  emerald: 'donor-emerald',
   sponsor: 'donor-sponsor',
 };
+
+// Минимальные тиры для функций
+export const MIN_TIER_FOR_NICKNAME_COLOR: DonorTier[] = ['iron', 'bronze', 'silver', 'gold', 'diamond', 'emerald', 'sponsor'];
+export const MIN_TIER_FOR_PROFILE_EMOJI: DonorTier[] = ['gold', 'diamond', 'emerald', 'sponsor'];
+
+export function canCustomizeNickname(donorTier: DonorTier): boolean {
+  return MIN_TIER_FOR_NICKNAME_COLOR.includes(donorTier);
+}
+
+export function canSetProfileEmoji(donorTier: DonorTier): boolean {
+  return MIN_TIER_FOR_PROFILE_EMOJI.includes(donorTier);
+}
 
 // Role-based nickname classes (takes priority over donor tier for special roles)
 export const ROLE_NICK_CLASSES: Record<AppRole, string> = {

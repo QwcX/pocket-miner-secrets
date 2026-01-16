@@ -1,6 +1,6 @@
 import { Badge } from '@/components/ui/badge';
 import { AppRole, DonorTier, ROLE_LABELS, DONOR_TIER_LABELS } from '@/types/database';
-import { Shield, Crown, Star, Code, Gamepad2, Eye, Sparkles, Gem, Flame } from 'lucide-react';
+import { Shield, Crown, Star, Code, Gamepad2, Eye, Sparkles, Gem, Flame, Leaf } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface RoleBadgeProps {
@@ -37,6 +37,7 @@ const DONOR_ICONS: Record<DonorTier, React.ReactNode> = {
   silver: <Star className="w-3 h-3" />,
   gold: <Star className="w-3 h-3" />,
   diamond: <Sparkles className="w-3 h-3" />,
+  emerald: <Leaf className="w-3 h-3" />,
   sponsor: <Sparkles className="w-3 h-3" />,
 };
 
@@ -47,6 +48,7 @@ const DONOR_BADGE_STYLES: Record<DonorTier, string> = {
   silver: 'bg-gray-400/20 text-gray-300 border-gray-400/30',
   gold: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
   diamond: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
+  emerald: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
   sponsor: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
 };
 

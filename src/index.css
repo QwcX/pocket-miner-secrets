@@ -49,6 +49,7 @@
     --donor-silver: 0 0% 70%;
     --donor-gold: 43 96% 56%;
     --donor-diamond: 195 90% 50%;
+    --donor-emerald: 142 70% 50%;
     --donor-sponsor: 280 80% 60%;
 
     --sidebar-background: 0 0% 3%;
@@ -234,6 +235,11 @@
   .donor-diamond {
     color: hsl(var(--donor-diamond));
     text-shadow: 0 0 10px hsl(var(--donor-diamond) / 0.5);
+  }
+
+  .donor-emerald {
+    color: hsl(var(--donor-emerald));
+    text-shadow: 0 0 10px hsl(var(--donor-emerald) / 0.5);
   }
 
   .donor-sponsor {

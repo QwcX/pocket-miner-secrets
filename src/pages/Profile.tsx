@@ -9,9 +9,11 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { User, Loader2, Save, Camera, ImagePlus, X } from 'lucide-react';
+import { User, Loader2, Save, Camera, ImagePlus, X, Lock, Smile } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { DonorTier, canCustomizeNickname, canSetProfileEmoji, DONOR_TIER_LABELS } from '@/types/database';
+import { EmojiPicker } from '@/components/EmojiPicker';
 
 const DISCORD_ICON = () => (
   <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor">
@@ -35,6 +37,7 @@ interface ExtendedProfile {
   telegram_username: string | null;
   profile_primary_color: string | null;
   profile_accent_color: string | null;
+  profile_emoji: string | null;
   created_at: string | null;
   updated_at: string | null;
   last_seen_at: string | null;
@@ -53,9 +56,11 @@ export default function Profile() {
     telegram_username: '',
     profile_primary_color: '',
     profile_accent_color: '',
+    profile_emoji: '',
   });
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [bannerFile, setBannerFile] = useState<File | null>(null);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
   // Fetch profile
   const { data: profile, isLoading: profileLoading } = useQuery({
@@ -73,6 +78,25 @@ export default function Profile() {
     enabled: !!user?.id,
   });
 
+  // Fetch user's donor tier
+  const { data: donorData } = useQuery({
+    queryKey: ['user-donor', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data } = await supabase
+        .from('user_donors')
+        .select('tier, nickname_color')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!user?.id,
+  });
+
+  const donorTier: DonorTier = (donorData?.tier as DonorTier) || 'none';
+  const canEditNickColor = canCustomizeNickname(donorTier);
+  const canEditEmoji = canSetProfileEmoji(donorTier);
+
   // Update form when profile loads
   useEffect(() => {
     if (profile) {
@@ -83,6 +107,7 @@ export default function Profile() {
         telegram_username: profile.telegram_username || '',
         profile_primary_color: profile.profile_primary_color || '',
         profile_accent_color: profile.profile_accent_color || '',
+        profile_emoji: profile.profile_emoji || '',
       });
     }
   }, [profile]);
@@ -138,8 +163,10 @@ export default function Profile() {
           banner_url: bannerUrl,
           discord_username: formData.discord_username || null,
           telegram_username: formData.telegram_username || null,
-          profile_primary_color: formData.profile_primary_color || null,
-          profile_accent_color: formData.profile_accent_color || null,
+          // Only update colors if user has permission
+          profile_primary_color: canEditNickColor ? (formData.profile_primary_color || null) : profile?.profile_primary_color,
+          profile_accent_color: canEditNickColor ? (formData.profile_accent_color || null) : profile?.profile_accent_color,
+          profile_emoji: canEditEmoji ? (formData.profile_emoji || null) : profile?.profile_emoji,
         })
         .eq('id', user.id);
 
@@ -314,167 +341,257 @@ export default function Profile() {
 
                 {/* Profile colors */}
                 <div className="border-t border-border/50 pt-6">
-                  <h3 className="text-lg font-medium mb-4">Цвета профиля</h3>
-
-                  {/* Color Presets */}
-                  <div className="mb-4">
-                    <p className="text-sm text-muted-foreground mb-2">Быстрые пресеты:</p>
-                    <div className="flex flex-wrap gap-2">
-                      {[
-                        { name: 'Золотой', primary: '#FFD700', accent: '#FFA500' },
-                        { name: 'Алмазный', primary: '#00D9FF', accent: '#0099CC' },
-                        { name: 'Неоновый', primary: '#FF00FF', accent: '#00FF00' },
-                        { name: 'Рубиновый', primary: '#E31B5F', accent: '#8B0000' },
-                        { name: 'Изумрудный', primary: '#50C878', accent: '#228B22' },
-                        { name: 'Аметист', primary: '#9966CC', accent: '#663399' },
-                        { name: 'Огненный', primary: '#FF4500', accent: '#FF6347' },
-                        { name: 'Ледяной', primary: '#87CEEB', accent: '#4682B4' },
-                        { name: 'Минимал', primary: '', accent: '' },
-                      ].map((preset) => (
-                        <Button
-                          key={preset.name}
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className="text-xs"
-                          style={{
-                            borderColor: preset.accent || undefined,
-                            color: preset.primary || undefined,
-                          }}
-                          onClick={() => setFormData({ 
-                            ...formData, 
-                            profile_primary_color: preset.primary,
-                            profile_accent_color: preset.accent 
-                          })}
-                        >
-                          {preset.primary && (
-                            <span 
-                              className="w-3 h-3 rounded-full mr-1.5" 
-                              style={{ backgroundColor: preset.primary }}
-                            />
-                          )}
-                          {preset.name}
-                        </Button>
-                      ))}
-                    </div>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-medium">Цвета профиля</h3>
+                    {!canEditNickColor && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Lock className="w-4 h-4" />
+                        <span>Доступно от Iron</span>
+                      </div>
+                    )}
                   </div>
 
-                  {/* Live Preview */}
-                  <div className="mb-6 p-4 rounded-lg bg-secondary/30 border border-border/50">
-                    <p className="text-xs text-muted-foreground mb-3">Предпросмотр:</p>
-                    <div className="flex items-center gap-3">
-                      <div 
-                        className="w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold"
-                        style={{
-                          backgroundColor: formData.profile_accent_color || 'hsl(var(--secondary))',
-                          color: formData.profile_primary_color || 'hsl(var(--foreground))',
-                        }}
-                      >
-                        {formData.username?.charAt(0)?.toUpperCase() || 'U'}
-                      </div>
-                      <div>
-                        <span 
-                          className="text-xl font-bold"
-                          style={{
-                            color: formData.profile_primary_color || undefined,
-                            textShadow: formData.profile_accent_color 
-                              ? `0 0 10px ${formData.profile_accent_color}, 0 0 20px ${formData.profile_accent_color}40`
-                              : undefined,
-                          }}
-                        >
-                          {formData.username || 'Username'}
-                        </span>
-                        <div className="flex items-center gap-2 mt-1">
-                          <span 
-                            className="text-xs px-2 py-0.5 rounded-full"
-                            style={{
-                              backgroundColor: formData.profile_accent_color 
-                                ? `${formData.profile_accent_color}30` 
-                                : 'hsl(var(--primary) / 0.2)',
-                              color: formData.profile_primary_color || 'hsl(var(--primary))',
-                              border: `1px solid ${formData.profile_accent_color || 'hsl(var(--primary) / 0.3)'}`,
-                            }}
-                          >
-                            Пример бейджа
-                          </span>
+                  {canEditNickColor ? (
+                    <>
+                      {/* Color Presets */}
+                      <div className="mb-4">
+                        <p className="text-sm text-muted-foreground mb-2">Быстрые пресеты:</p>
+                        <div className="flex flex-wrap gap-2">
+                          {[
+                            { name: 'Золотой', primary: '#FFD700', accent: '#FFA500' },
+                            { name: 'Алмазный', primary: '#00D9FF', accent: '#0099CC' },
+                            { name: 'Неоновый', primary: '#FF00FF', accent: '#00FF00' },
+                            { name: 'Рубиновый', primary: '#E31B5F', accent: '#8B0000' },
+                            { name: 'Изумрудный', primary: '#50C878', accent: '#228B22' },
+                            { name: 'Аметист', primary: '#9966CC', accent: '#663399' },
+                            { name: 'Огненный', primary: '#FF4500', accent: '#FF6347' },
+                            { name: 'Ледяной', primary: '#87CEEB', accent: '#4682B4' },
+                            { name: 'Минимал', primary: '', accent: '' },
+                          ].map((preset) => (
+                            <Button
+                              key={preset.name}
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="text-xs"
+                              style={{
+                                borderColor: preset.accent || undefined,
+                                color: preset.primary || undefined,
+                              }}
+                              onClick={() => setFormData({ 
+                                ...formData, 
+                                profile_primary_color: preset.primary,
+                                profile_accent_color: preset.accent 
+                              })}
+                            >
+                              {preset.primary && (
+                                <span 
+                                  className="w-3 h-3 rounded-full mr-1.5" 
+                                  style={{ backgroundColor: preset.primary }}
+                                />
+                              )}
+                              {preset.name}
+                            </Button>
+                          ))}
                         </div>
                       </div>
-                    </div>
-                  </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="profile_primary_color">Primary цвет</Label>
-                      <div className="flex items-center gap-3">
-                        <Input
-                          id="profile_primary_color"
-                          type="color"
-                          value={formData.profile_primary_color || '#000000'}
-                          onChange={(e) =>
-                            setFormData({ ...formData, profile_primary_color: e.target.value })
-                          }
-                          className="h-10 w-14 p-1 glass-input cursor-pointer"
-                          aria-label="Primary цвет"
-                        />
-                        <Input
-                          value={formData.profile_primary_color}
-                          onChange={(e) =>
-                            setFormData({ ...formData, profile_primary_color: e.target.value })
-                          }
-                          placeholder="#RRGGBB"
-                          className="glass-input"
-                          inputMode="text"
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="glass-button"
-                          onClick={() => setFormData({ ...formData, profile_primary_color: '' })}
-                        >
-                          Сброс
-                        </Button>
+                      {/* Live Preview */}
+                      <div className="mb-6 p-4 rounded-lg bg-secondary/30 border border-border/50">
+                        <p className="text-xs text-muted-foreground mb-3">Предпросмотр:</p>
+                        <div className="flex items-center gap-3">
+                          <div 
+                            className="w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold"
+                            style={{
+                              backgroundColor: formData.profile_accent_color || 'hsl(var(--secondary))',
+                              color: formData.profile_primary_color || 'hsl(var(--foreground))',
+                            }}
+                          >
+                            {formData.username?.charAt(0)?.toUpperCase() || 'U'}
+                          </div>
+                          <div>
+                            <span 
+                              className="text-xl font-bold"
+                              style={{
+                                color: formData.profile_primary_color || undefined,
+                                textShadow: formData.profile_accent_color 
+                                  ? `0 0 10px ${formData.profile_accent_color}, 0 0 20px ${formData.profile_accent_color}40`
+                                  : undefined,
+                              }}
+                            >
+                              {formData.profile_emoji && <span className="mr-1">{formData.profile_emoji}</span>}
+                              {formData.username || 'Username'}
+                            </span>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span 
+                                className="text-xs px-2 py-0.5 rounded-full"
+                                style={{
+                                  backgroundColor: formData.profile_accent_color 
+                                    ? `${formData.profile_accent_color}30` 
+                                    : 'hsl(var(--primary) / 0.2)',
+                                  color: formData.profile_primary_color || 'hsl(var(--primary))',
+                                  border: `1px solid ${formData.profile_accent_color || 'hsl(var(--primary) / 0.3)'}`,
+                                }}
+                              >
+                                {DONOR_TIER_LABELS[donorTier]}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        Основной цвет ника и текста.
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="profile_primary_color">Primary цвет</Label>
+                          <div className="flex items-center gap-3">
+                            <Input
+                              id="profile_primary_color"
+                              type="color"
+                              value={formData.profile_primary_color || '#000000'}
+                              onChange={(e) =>
+                                setFormData({ ...formData, profile_primary_color: e.target.value })
+                              }
+                              className="h-10 w-14 p-1 glass-input cursor-pointer"
+                              aria-label="Primary цвет"
+                            />
+                            <Input
+                              value={formData.profile_primary_color}
+                              onChange={(e) =>
+                                setFormData({ ...formData, profile_primary_color: e.target.value })
+                              }
+                              placeholder="#RRGGBB"
+                              className="glass-input"
+                              inputMode="text"
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="glass-button"
+                              onClick={() => setFormData({ ...formData, profile_primary_color: '' })}
+                            >
+                              Сброс
+                            </Button>
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            Основной цвет ника и текста.
+                          </p>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="profile_accent_color">Accent цвет</Label>
+                          <div className="flex items-center gap-3">
+                            <Input
+                              id="profile_accent_color"
+                              type="color"
+                              value={formData.profile_accent_color || '#000000'}
+                              onChange={(e) =>
+                                setFormData({ ...formData, profile_accent_color: e.target.value })
+                              }
+                              className="h-10 w-14 p-1 glass-input cursor-pointer"
+                              aria-label="Accent цвет"
+                            />
+                            <Input
+                              value={formData.profile_accent_color}
+                              onChange={(e) =>
+                                setFormData({ ...formData, profile_accent_color: e.target.value })
+                              }
+                              placeholder="#RRGGBB"
+                              className="glass-input"
+                              inputMode="text"
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="glass-button"
+                              onClick={() => setFormData({ ...formData, profile_accent_color: '' })}
+                            >
+                              Сброс
+                            </Button>
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            Свечение, обводки и фон бейджей.
+                          </p>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="p-6 rounded-lg bg-secondary/20 border border-border/30 text-center">
+                      <Lock className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                      <p className="text-muted-foreground">
+                        Кастомизация цветов ника доступна от тира <strong>Iron</strong> и выше.
                       </p>
                     </div>
+                  )}
+                </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="profile_accent_color">Accent цвет</Label>
-                      <div className="flex items-center gap-3">
-                        <Input
-                          id="profile_accent_color"
-                          type="color"
-                          value={formData.profile_accent_color || '#000000'}
-                          onChange={(e) =>
-                            setFormData({ ...formData, profile_accent_color: e.target.value })
-                          }
-                          className="h-10 w-14 p-1 glass-input cursor-pointer"
-                          aria-label="Accent цвет"
-                        />
-                        <Input
-                          value={formData.profile_accent_color}
-                          onChange={(e) =>
-                            setFormData({ ...formData, profile_accent_color: e.target.value })
-                          }
-                          placeholder="#RRGGBB"
-                          className="glass-input"
-                          inputMode="text"
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="glass-button"
-                          onClick={() => setFormData({ ...formData, profile_accent_color: '' })}
-                        >
-                          Сброс
-                        </Button>
+                {/* Profile Emoji */}
+                <div className="border-t border-border/50 pt-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-medium flex items-center gap-2">
+                      <Smile className="w-5 h-5" />
+                      Эмодзи профиля
+                    </h3>
+                    {!canEditEmoji && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Lock className="w-4 h-4" />
+                        <span>Доступно от Gold</span>
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        Свечение, обводки и фон бейджей.
+                    )}
+                  </div>
+
+                  {canEditEmoji ? (
+                    <div className="space-y-3">
+                      <p className="text-sm text-muted-foreground">
+                        Эмодзи отображается рядом с вашим ником на сайте.
+                      </p>
+                      <div className="flex items-center gap-3">
+                        <div className="relative">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="glass-button w-14 h-14 text-2xl"
+                            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                          >
+                            {formData.profile_emoji || <Smile className="w-6 h-6 text-muted-foreground" />}
+                          </Button>
+                          {showEmojiPicker && (
+                            <div className="absolute z-50 top-full mt-2" onClick={(e) => e.stopPropagation()}>
+                              <EmojiPicker
+                                onEmojiSelect={(emoji) => {
+                                  setFormData({ ...formData, profile_emoji: emoji });
+                                  setShowEmojiPicker(false);
+                                }}
+                              />
+                            </div>
+                          )}
+                        </div>
+                        <Input
+                          value={formData.profile_emoji}
+                          onChange={(e) => setFormData({ ...formData, profile_emoji: e.target.value })}
+                          placeholder="Введите эмодзи"
+                          className="glass-input w-32"
+                          maxLength={4}
+                        />
+                        {formData.profile_emoji && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="glass-button"
+                            onClick={() => setFormData({ ...formData, profile_emoji: '' })}
+                          >
+                            Убрать
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="p-6 rounded-lg bg-secondary/20 border border-border/30 text-center">
+                      <Lock className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                      <p className="text-muted-foreground">
+                        Эмодзи профиля доступно от тира <strong>Gold</strong> и выше.
                       </p>
                     </div>
-                  </div>
+                  )}
                 </div>
 
                 {/* Social Links */}
