@@ -13,6 +13,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { UserNickname } from '@/components/UserNickname';
 import { useToast } from '@/hooks/use-toast';
 import { useNotificationSound } from '@/hooks/useNotificationSound';
+import { useRateLimit } from '@/hooks/useRateLimit';
 import { Helmet } from 'react-helmet-async';
 import { EmojiPicker } from '@/components/EmojiPicker';
 import { 
@@ -92,6 +93,7 @@ export default function Messages() {
   const { user } = useAuth();
   const { toast } = useToast();
   const { playMessageSound } = useNotificationSound();
+  const { checkRateLimit } = useRateLimit();
   const queryClient = useQueryClient();
   const [messageText, setMessageText] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -209,6 +211,16 @@ export default function Messages() {
   const sendMutation = useMutation({
     mutationFn: async (content: string) => {
       if (!user || !recipientId) throw new Error('Not authenticated');
+      
+      // Rate limit messages
+      const allowed = await checkRateLimit({
+        actionType: 'message',
+        maxRequests: 20,
+        windowSeconds: 60,
+      });
+      if (!allowed) {
+        throw new Error('Слишком много сообщений. Подождите немного.');
+      }
       
       // Check for spam
       const isSpam = await checkForSpam(content);

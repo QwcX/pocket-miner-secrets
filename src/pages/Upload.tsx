@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { useRateLimit } from '@/hooks/useRateLimit';
 import { 
   Upload as UploadIcon, 
   X, 
@@ -54,6 +55,7 @@ export default function Upload() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
+  const { checkRateLimit } = useRateLimit();
 
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -106,6 +108,14 @@ export default function Upload() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
+
+    // Rate limit uploads
+    const allowed = await checkRateLimit({
+      actionType: 'upload',
+      maxRequests: 5,
+      windowSeconds: 3600, // 5 uploads per hour
+    });
+    if (!allowed) return;
 
     // Validate form
     const result = uploadSchema.safeParse(formData);

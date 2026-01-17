@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { UserNickname } from '@/components/UserNickname';
 import { YouTubeEmbed, findYouTubeLinks } from '@/components/YouTubeEmbed';
 import { DonorBadge } from '@/components/DonorBadge';
+import { useRateLimit } from '@/hooks/useRateLimit';
 import { 
   Download, Star, Eye, Calendar, User, Heart, HeartOff, Crown,
   MessageSquare, History, ArrowLeft, Send, Trash2, LogIn,
@@ -54,6 +55,7 @@ export default function Project() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { checkRateLimit } = useRateLimit();
 
   const [showAuthDialog, setShowAuthDialog] = useState(false);
   const [authAction, setAuthAction] = useState('');
@@ -323,11 +325,19 @@ export default function Project() {
     favoriteMutation.mutate();
   };
 
-  const handleComment = () => {
+  const handleComment = async () => {
     if (!requireAuth('оставить комментарий')) return;
-    if (commentText.trim()) {
-      commentMutation.mutate();
-    }
+    if (!commentText.trim()) return;
+    
+    // Rate limit comments
+    const allowed = await checkRateLimit({
+      actionType: 'comment',
+      maxRequests: 10,
+      windowSeconds: 60,
+    });
+    if (!allowed) return;
+    
+    commentMutation.mutate();
   };
 
   if (isLoading) return <Layout><div className="container py-8"><Skeleton className="h-64 w-full" /></div></Layout>;
