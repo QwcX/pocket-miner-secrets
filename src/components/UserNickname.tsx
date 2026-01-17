@@ -12,9 +12,11 @@ interface UserNicknameProps {
   customColor?: string | null;
   profilePrimaryColor?: string | null;
   profileAccentColor?: string | null;
+  profileEmoji?: string | null;
   className?: string;
   asLink?: boolean;
   showBadge?: boolean;
+  showEmoji?: boolean;
 }
 
 export function UserNickname({
@@ -25,9 +27,11 @@ export function UserNickname({
   customColor,
   profilePrimaryColor,
   profileAccentColor,
+  profileEmoji,
   className,
   asLink = true,
   showBadge = false,
+  showEmoji = true,
 }: UserNicknameProps) {
   // Priority order (highest to lowest):
   // 1. Admin (red) - staff
@@ -80,6 +84,25 @@ export function UserNickname({
       }
     : undefined;
 
+  // Parse emoji - could be a unicode emoji or an image URL
+  const renderEmoji = () => {
+    if (!showEmoji || !profileEmoji) return null;
+    
+    // Check if it's an image URL (custom emoji)
+    if (profileEmoji.startsWith('http') || profileEmoji.startsWith('/')) {
+      return (
+        <img 
+          src={profileEmoji} 
+          alt="emoji" 
+          className="inline-block w-4 h-4 align-middle ml-1"
+        />
+      );
+    }
+    
+    // It's a unicode emoji
+    return <span className="ml-1">{profileEmoji}</span>;
+  };
+
   const nicknameElement = (
     <span 
       className={cn(
@@ -91,6 +114,7 @@ export function UserNickname({
       style={style}
     >
       {username}
+      {renderEmoji()}
     </span>
   );
 

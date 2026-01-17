@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,8 @@ import { Blocks, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { z } from 'zod';
 import { Helmet } from 'react-helmet-async';
 import { supabase } from '@/integrations/supabase/client';
+import { SimpleCaptcha } from '@/components/SimpleCaptcha';
+import { useRateLimit } from '@/hooks/useRateLimit';
 
 const signUpSchema = z.object({
   username: z.string().min(3, 'Минимум 3 символа').max(20, 'Максимум 20 символов').regex(/^[a-zA-Z0-9_]+$/, 'Только буквы, цифры и _'),
@@ -50,12 +52,15 @@ export default function Auth() {
   const { user, signIn, signUp, signInWithGoogle, loading: authLoading } = useAuth();
   const { toast } = useToast();
 
+  const { checkRateLimit } = useRateLimit();
+  
   const [mode, setMode] = useState<'login' | 'signup'>(
     searchParams.get('mode') === 'signup' ? 'signup' : 'login'
   );
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [captchaVerified, setCaptchaVerified] = useState(false);
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -63,6 +68,10 @@ export default function Auth() {
     password: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const handleCaptchaVerify = useCallback((verified: boolean) => {
+    setCaptchaVerified(verified);
+  }, []);
 
   useEffect(() => {
     if (user && !authLoading) {
@@ -89,6 +98,27 @@ export default function Auth() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
+
+    // For signup, require captcha
+    if (mode === 'signup' && !captchaVerified) {
+      toast({
+        title: 'Подтвердите что вы не бот',
+        description: 'Решите математический пример',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Rate limiting check
+    const actionType = mode === 'signup' ? 'signup' : 'login';
+    const allowed = await checkRateLimit({
+      actionType,
+      maxRequests: mode === 'signup' ? 3 : 5,
+      windowSeconds: 60,
+    });
+    
+    if (!allowed) return;
+
     setLoading(true);
 
     try {
@@ -347,10 +377,15 @@ export default function Auth() {
                 )}
               </div>
 
+              {/* Captcha for signup */}
+              {mode === 'signup' && (
+                <SimpleCaptcha onVerify={handleCaptchaVerify} />
+              )}
+
               <Button
                 type="submit"
                 className="w-full bg-primary hover:bg-primary/90"
-                disabled={loading}
+                disabled={loading || (mode === 'signup' && !captchaVerified)}
               >
                 {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 {mode === 'login' ? 'Войти' : 'Зарегистрироваться'}

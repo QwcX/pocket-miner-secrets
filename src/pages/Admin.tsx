@@ -47,9 +47,12 @@ import {
   Gamepad2,
   BookMarked,
   AlertTriangle,
+  Gem,
+  Leaf,
+  Coins,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ROLE_LABELS, ROLE_COLORS, AppRole } from '@/types/database';
+import { ROLE_LABELS, ROLE_COLORS, AppRole, DonorTier, DONOR_TIER_LABELS, DONOR_TIER_COLORS, DONOR_PRIORITY } from '@/types/database';
 import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -64,6 +67,17 @@ const ROLE_ICONS: Record<AppRole, typeof Crown> = {
   user: User,
 };
 
+const DONOR_ICONS: Record<DonorTier, typeof Gem> = {
+  none: User,
+  iron: Shield,
+  bronze: Coins,
+  silver: Coins,
+  gold: Crown,
+  diamond: Gem,
+  emerald: Leaf,
+  sponsor: Crown,
+};
+
 interface UserWithRoles {
   id: string;
   username: string;
@@ -71,6 +85,8 @@ interface UserWithRoles {
   created_at: string;
   last_seen_at: string | null;
   roles: AppRole[];
+  donorTier?: DonorTier;
+  donorExpires?: string | null;
 }
 
 export default function Admin() {
@@ -82,7 +98,9 @@ export default function Admin() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedUser, setSelectedUser] = useState<UserWithRoles | null>(null);
   const [roleDialogOpen, setRoleDialogOpen] = useState(false);
+  const [donorDialogOpen, setDonorDialogOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState<AppRole>('user');
+  const [selectedDonorTier, setSelectedDonorTier] = useState<DonorTier>('iron');
 
   // Check if current user is admin
   const { data: isAdmin, isLoading: adminCheckLoading } = useQuery({
@@ -100,7 +118,7 @@ export default function Admin() {
     enabled: !!user,
   });
 
-  // Fetch all users with their roles
+  // Fetch all users with their roles and donor status
   const { data: users = [], isLoading: usersLoading } = useQuery({
     queryKey: ['adminUsers', searchQuery],
     queryFn: async () => {
@@ -116,17 +134,21 @@ export default function Admin() {
       const { data: profiles, error } = await query.limit(100);
       if (error) throw error;
 
-      // Get roles for all users
+      // Get roles and donors for all users
       const userIds = profiles?.map(p => p.id) || [];
-      const { data: rolesData } = await supabase
-        .from('user_roles')
-        .select('user_id, role')
-        .in('user_id', userIds);
+      const [rolesRes, donorsRes] = await Promise.all([
+        supabase.from('user_roles').select('user_id, role').in('user_id', userIds),
+        supabase.from('user_donors').select('user_id, tier, expires_at').in('user_id', userIds),
+      ]);
+
+      const donorMap = new Map((donorsRes.data || []).map(d => [d.user_id, d]));
 
       // Merge roles with profiles
       return profiles?.map(profile => ({
         ...profile,
-        roles: rolesData?.filter(r => r.user_id === profile.id).map(r => r.role as AppRole) || [],
+        roles: rolesRes.data?.filter(r => r.user_id === profile.id).map(r => r.role as AppRole) || [],
+        donorTier: (donorMap.get(profile.id)?.tier as DonorTier) || 'none',
+        donorExpires: donorMap.get(profile.id)?.expires_at || null,
       })) as UserWithRoles[];
     },
     enabled: isAdmin === true,
@@ -195,6 +217,66 @@ export default function Admin() {
     },
   });
 
+  // Set donor tier mutation
+  const setDonorMutation = useMutation({
+    mutationFn: async ({ userId, tier }: { userId: string; tier: DonorTier }) => {
+      // Check if user already has donor record
+      const { data: existing } = await supabase
+        .from('user_donors')
+        .select('id')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (tier === 'none') {
+        // Remove donor status
+        if (existing) {
+          const { error } = await supabase
+            .from('user_donors')
+            .delete()
+            .eq('user_id', userId);
+          if (error) throw error;
+        }
+      } else {
+        if (existing) {
+          // Update existing
+          const { error } = await supabase
+            .from('user_donors')
+            .update({ tier })
+            .eq('user_id', userId);
+          if (error) throw error;
+        } else {
+          // Insert new
+          const { error } = await supabase
+            .from('user_donors')
+            .insert({ user_id: userId, tier });
+          if (error) throw error;
+        }
+      }
+
+      // Send notification
+      await supabase.from('notifications').insert({
+        user_id: userId,
+        type: 'donor_changed',
+        title: tier === 'none' ? 'Донат-статус удалён' : 'Новый донат-статус!',
+        message: tier === 'none' 
+          ? 'Ваш донат-статус был удалён' 
+          : `Вам был выдан донат-статус: ${DONOR_TIER_LABELS[tier]}`,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminUsers'] });
+      toast({ title: 'Донат-статус обновлён!' });
+      setDonorDialogOpen(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Ошибка',
+        description: error.message || 'Не удалось обновить донат-статус',
+        variant: 'destructive',
+      });
+    },
+  });
+
   // Redirect if not authenticated
   if (!user) {
     navigate('/auth');
@@ -241,6 +323,17 @@ export default function Admin() {
     setRoleDialogOpen(true);
   };
 
+  const openDonorDialog = (userItem: UserWithRoles) => {
+    setSelectedUser(userItem);
+    setSelectedDonorTier(userItem.donorTier || 'iron');
+    setDonorDialogOpen(true);
+  };
+
+  // Sort donor tiers by priority
+  const sortedDonorTiers = Object.entries(DONOR_PRIORITY)
+    .sort((a, b) => a[1] - b[1])
+    .map(([tier]) => tier as DonorTier);
+
   return (
     <>
       <Helmet>
@@ -255,7 +348,7 @@ export default function Admin() {
             </div>
             <div>
               <h1 className="text-2xl font-display text-foreground">Админ-панель</h1>
-              <p className="text-muted-foreground">Управление пользователями и ролями</p>
+              <p className="text-muted-foreground">Управление пользователями, ролями и донатами</p>
             </div>
           </div>
 
@@ -291,8 +384,8 @@ export default function Admin() {
                       <TableRow className="border-border/50">
                         <TableHead>Пользователь</TableHead>
                         <TableHead>Роли</TableHead>
+                        <TableHead>Донат</TableHead>
                         <TableHead>Регистрация</TableHead>
-                        <TableHead>Последняя активность</TableHead>
                         <TableHead className="text-right">Действия</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -310,81 +403,97 @@ export default function Admin() {
                           </TableCell>
                         </TableRow>
                       ) : (
-                        users.map((userItem) => (
-                          <TableRow key={userItem.id} className="border-border/30 hover:bg-secondary/30">
-                            <TableCell>
-                              <div className="flex items-center gap-3">
-                                <Avatar className="w-10 h-10 border-2 border-border">
-                                  <AvatarImage src={userItem.avatar_url || undefined} />
-                                  <AvatarFallback className="bg-secondary">
-                                    {userItem.username?.charAt(0).toUpperCase() || 'U'}
-                                  </AvatarFallback>
-                                </Avatar>
-                                <div>
-                                  <p className="font-medium">{userItem.username}</p>
-                                  <p className="text-xs text-muted-foreground truncate max-w-[150px]">
-                                    {userItem.id}
-                                  </p>
+                        users.map((userItem) => {
+                          const DonorIcon = DONOR_ICONS[userItem.donorTier || 'none'];
+                          return (
+                            <TableRow key={userItem.id} className="border-border/30 hover:bg-secondary/30">
+                              <TableCell>
+                                <div className="flex items-center gap-3">
+                                  <Avatar className="w-10 h-10 border-2 border-border">
+                                    <AvatarImage src={userItem.avatar_url || undefined} />
+                                    <AvatarFallback className="bg-secondary">
+                                      {userItem.username?.charAt(0).toUpperCase() || 'U'}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div>
+                                    <p className="font-medium">{userItem.username}</p>
+                                    <p className="text-xs text-muted-foreground truncate max-w-[150px]">
+                                      {userItem.id}
+                                    </p>
+                                  </div>
                                 </div>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex flex-wrap gap-1">
-                                {userItem.roles.length === 0 ? (
-                                  <Badge variant="outline" className="text-muted-foreground">
-                                    Нет ролей
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex flex-wrap gap-1">
+                                  {userItem.roles.length === 0 ? (
+                                    <Badge variant="outline" className="text-muted-foreground">
+                                      Нет ролей
+                                    </Badge>
+                                  ) : (
+                                    userItem.roles.map((role) => {
+                                      const Icon = ROLE_ICONS[role];
+                                      return (
+                                        <Badge
+                                          key={role}
+                                          className={`${ROLE_COLORS[role]} gap-1 group cursor-pointer`}
+                                          onClick={() => {
+                                            if (role !== 'admin' || userItem.id !== user?.id) {
+                                              removeRoleMutation.mutate({ userId: userItem.id, role });
+                                            }
+                                          }}
+                                        >
+                                          <Icon className="w-3 h-3" />
+                                          {ROLE_LABELS[role]}
+                                          {(role !== 'admin' || userItem.id !== user?.id) && (
+                                            <UserMinus className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                          )}
+                                        </Badge>
+                                      );
+                                    })
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                {userItem.donorTier && userItem.donorTier !== 'none' ? (
+                                  <Badge className={`${DONOR_TIER_COLORS[userItem.donorTier]} gap-1`}>
+                                    <DonorIcon className="w-3 h-3" />
+                                    {DONOR_TIER_LABELS[userItem.donorTier]}
                                   </Badge>
                                 ) : (
-                                  userItem.roles.map((role) => {
-                                    const Icon = ROLE_ICONS[role];
-                                    return (
-                                      <Badge
-                                        key={role}
-                                        className={`${ROLE_COLORS[role]} gap-1 group cursor-pointer`}
-                                        onClick={() => {
-                                          if (role !== 'admin' || userItem.id !== user?.id) {
-                                            removeRoleMutation.mutate({ userId: userItem.id, role });
-                                          }
-                                        }}
-                                      >
-                                        <Icon className="w-3 h-3" />
-                                        {ROLE_LABELS[role]}
-                                        {(role !== 'admin' || userItem.id !== user?.id) && (
-                                          <UserMinus className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                        )}
-                                      </Badge>
-                                    );
-                                  })
+                                  <span className="text-muted-foreground text-sm">—</span>
                                 )}
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-muted-foreground">
-                              {formatDistanceToNow(new Date(userItem.created_at), {
-                                addSuffix: true,
-                                locale: ru,
-                              })}
-                            </TableCell>
-                            <TableCell className="text-muted-foreground">
-                              {userItem.last_seen_at
-                                ? formatDistanceToNow(new Date(userItem.last_seen_at), {
-                                    addSuffix: true,
-                                    locale: ru,
-                                  })
-                                : 'Неизвестно'}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => openAddRoleDialog(userItem)}
-                                className="glass-button gap-1"
-                              >
-                                <UserPlus className="w-4 h-4" />
-                                Роль
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))
+                              </TableCell>
+                              <TableCell className="text-muted-foreground">
+                                {formatDistanceToNow(new Date(userItem.created_at), {
+                                  addSuffix: true,
+                                  locale: ru,
+                                })}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <div className="flex gap-2 justify-end">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => openAddRoleDialog(userItem)}
+                                    className="glass-button gap-1"
+                                  >
+                                    <UserPlus className="w-4 h-4" />
+                                    Роль
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => openDonorDialog(userItem)}
+                                    className="glass-button gap-1"
+                                  >
+                                    <Gem className="w-4 h-4" />
+                                    Донат
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })
                       )}
                     </TableBody>
                   </Table>
@@ -393,7 +502,7 @@ export default function Admin() {
             </TabsContent>
 
             <TabsContent value="stats">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <Card className="glass-card">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm font-normal text-muted-foreground">
@@ -425,6 +534,18 @@ export default function Admin() {
                   <CardContent>
                     <p className="text-3xl font-bold text-primary">
                       {users.filter(u => u.roles.includes('moderator')).length}
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card className="glass-card">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-normal text-muted-foreground">
+                      Донатеров
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-3xl font-bold text-donor-gold">
+                      {users.filter(u => u.donorTier && u.donorTier !== 'none').length}
                     </p>
                   </CardContent>
                 </Card>
@@ -498,6 +619,96 @@ export default function Admin() {
               >
                 {addRoleMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 Добавить
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Donor Tier Dialog */}
+        <Dialog open={donorDialogOpen} onOpenChange={setDonorDialogOpen}>
+          <DialogContent className="glass-card">
+            <DialogHeader>
+              <DialogTitle>Управление донат-статусом</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="flex items-center gap-3">
+                <Avatar className="w-12 h-12 border-2 border-border">
+                  <AvatarImage src={selectedUser?.avatar_url || undefined} />
+                  <AvatarFallback className="bg-secondary">
+                    {selectedUser?.username?.charAt(0).toUpperCase() || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="font-medium">{selectedUser?.username}</p>
+                  {selectedUser?.donorTier && selectedUser.donorTier !== 'none' && (
+                    <Badge className={`${DONOR_TIER_COLORS[selectedUser.donorTier]} mt-1`}>
+                      {DONOR_TIER_LABELS[selectedUser.donorTier]}
+                    </Badge>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground">
+                  Выберите донат-уровень. Пользователь получит все привилегии выбранного уровня и ниже.
+                </p>
+                <Select value={selectedDonorTier} onValueChange={(v) => setSelectedDonorTier(v as DonorTier)}>
+                  <SelectTrigger className="glass-input">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="glass-card">
+                    {sortedDonorTiers.map((tier) => {
+                      const Icon = DONOR_ICONS[tier];
+                      const isCurrent = selectedUser?.donorTier === tier;
+                      return (
+                        <SelectItem key={tier} value={tier}>
+                          <div className="flex items-center gap-2">
+                            <Icon className="w-4 h-4" />
+                            {DONOR_TIER_LABELS[tier]}
+                            {isCurrent && <span className="text-xs text-muted-foreground">(текущий)</span>}
+                          </div>
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="bg-secondary/50 rounded-lg p-3 text-sm">
+                <p className="font-medium mb-2">Привилегии уровня {DONOR_TIER_LABELS[selectedDonorTier]}:</p>
+                <ul className="space-y-1 text-muted-foreground">
+                  {DONOR_PRIORITY[selectedDonorTier] >= DONOR_PRIORITY['iron'] && (
+                    <li>✓ Кастомный цвет никнейма</li>
+                  )}
+                  {DONOR_PRIORITY[selectedDonorTier] >= DONOR_PRIORITY['gold'] && (
+                    <li>✓ Эмодзи в профиле</li>
+                  )}
+                  {DONOR_PRIORITY[selectedDonorTier] >= DONOR_PRIORITY['diamond'] && (
+                    <li>✓ Приоритетная поддержка</li>
+                  )}
+                  {DONOR_PRIORITY[selectedDonorTier] >= DONOR_PRIORITY['sponsor'] && (
+                    <li>✓ Особый бейдж спонсора</li>
+                  )}
+                  {selectedDonorTier === 'none' && (
+                    <li className="text-muted-foreground">Без привилегий</li>
+                  )}
+                </ul>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setDonorDialogOpen(false)}>
+                Отмена
+              </Button>
+              <Button
+                onClick={() => {
+                  if (selectedUser) {
+                    setDonorMutation.mutate({ userId: selectedUser.id, tier: selectedDonorTier });
+                  }
+                }}
+                disabled={setDonorMutation.isPending}
+              >
+                {setDonorMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                {selectedDonorTier === 'none' ? 'Удалить статус' : 'Применить'}
               </Button>
             </DialogFooter>
           </DialogContent>
