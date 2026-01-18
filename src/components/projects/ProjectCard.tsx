@@ -18,7 +18,8 @@ export function ProjectCard({ project, rating = 0 }: ProjectCardProps) {
   const { data: authorInfo } = useQuery({
     queryKey: ['author-info', project.author_id],
     queryFn: async () => {
-      const [roleResult, donorResult] = await Promise.all([
+      const [profileResult, roleResult, donorResult] = await Promise.all([
+        supabase.from('profiles').select('profile_primary_color, profile_accent_color, profile_emoji').eq('id', project.author_id).maybeSingle(),
         supabase.from('user_roles').select('role').eq('user_id', project.author_id),
         supabase.from('user_donors').select('tier, nickname_color').eq('user_id', project.author_id).maybeSingle(),
       ]);
@@ -32,6 +33,9 @@ export function ProjectCard({ project, rating = 0 }: ProjectCardProps) {
         role: highestRole,
         donorTier: (donorResult.data?.tier as DonorTier) || 'none',
         nicknameColor: donorResult.data?.nickname_color || null,
+        profilePrimaryColor: profileResult.data?.profile_primary_color || null,
+        profileAccentColor: profileResult.data?.profile_accent_color || null,
+        profileEmoji: profileResult.data?.profile_emoji || null,
       };
     },
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
@@ -107,6 +111,9 @@ export function ProjectCard({ project, rating = 0 }: ProjectCardProps) {
             role={authorInfo?.role}
             donorTier={authorInfo?.donorTier}
             customColor={authorInfo?.nicknameColor}
+            profilePrimaryColor={authorInfo?.profilePrimaryColor}
+            profileAccentColor={authorInfo?.profileAccentColor}
+            profileEmoji={authorInfo?.profileEmoji}
             className="text-xs sm:text-sm"
           />
         </div>

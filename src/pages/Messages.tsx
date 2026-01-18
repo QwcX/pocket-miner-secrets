@@ -39,6 +39,9 @@ interface Conversation {
   partnerRole?: AppRole;
   partnerDonorTier?: DonorTier;
   partnerNicknameColor?: string | null;
+  partnerProfileEmoji?: string | null;
+  partnerProfilePrimaryColor?: string | null;
+  partnerProfileAccentColor?: string | null;
 }
 
 interface Message {
@@ -133,7 +136,7 @@ export default function Messages() {
       // Fetch partner profiles
       const partnerIds = [...convMap.keys()];
       const [profilesRes, rolesRes, donorsRes] = await Promise.all([
-        supabase.from('profiles').select('id, username, avatar_url').in('id', partnerIds),
+        supabase.from('profiles').select('id, username, avatar_url, profile_emoji, profile_primary_color, profile_accent_color').in('id', partnerIds),
         supabase.from('user_roles').select('user_id, role').in('user_id', partnerIds),
         supabase.from('user_donors').select('user_id, tier, nickname_color').in('user_id', partnerIds),
       ]);
@@ -156,6 +159,9 @@ export default function Messages() {
         partnerRole: roleMap.get(conv.partnerId) || 'user',
         partnerDonorTier: (donorMap.get(conv.partnerId)?.tier as DonorTier) || 'none',
         partnerNicknameColor: donorMap.get(conv.partnerId)?.nickname_color || null,
+        partnerProfileEmoji: profileMap.get(conv.partnerId)?.profile_emoji || null,
+        partnerProfilePrimaryColor: profileMap.get(conv.partnerId)?.profile_primary_color || null,
+        partnerProfileAccentColor: profileMap.get(conv.partnerId)?.profile_accent_color || null,
       })) as Conversation[];
     },
     enabled: !!user,
@@ -360,6 +366,9 @@ export default function Messages() {
                             role={conv.partnerRole}
                             donorTier={conv.partnerDonorTier}
                             customColor={conv.partnerNicknameColor}
+                            profilePrimaryColor={conv.partnerProfilePrimaryColor}
+                            profileAccentColor={conv.partnerProfileAccentColor}
+                            profileEmoji={conv.partnerProfileEmoji}
                             asLink={false}
                           />
                           <p className="text-xs text-muted-foreground truncate">

@@ -18,6 +18,7 @@ interface OnlineUser {
     username: string;
     profile_primary_color?: string | null;
     profile_accent_color?: string | null;
+    profile_emoji?: string | null;
   };
   role?: AppRole;
   donor_tier?: DonorTier;
@@ -37,6 +38,7 @@ interface RecentActivity {
   nickname_color?: string | null;
   profile_primary_color?: string | null;
   profile_accent_color?: string | null;
+  profile_emoji?: string | null;
 }
 
 export function OnlineUsersWidget() {
@@ -114,7 +116,7 @@ export function OnlineUsersWidget() {
       const [profilesRes, rolesRes, donorsRes] = await Promise.all([
         supabase
           .from('profiles')
-          .select('id, username, profile_primary_color, profile_accent_color')
+          .select('id, username, profile_primary_color, profile_accent_color, profile_emoji')
           .in('id', userIds),
         supabase.from('user_roles').select('user_id, role').in('user_id', userIds),
         supabase.from('user_donors').select('user_id, tier, nickname_color').in('user_id', userIds),
@@ -169,7 +171,7 @@ export function OnlineUsersWidget() {
       const [profilesRes, rolesRes, donorsRes] = await Promise.all([
         supabase
           .from('profiles')
-          .select('id, username, profile_primary_color, profile_accent_color')
+          .select('id, username, profile_primary_color, profile_accent_color, profile_emoji')
           .in('id', userIdsArr),
         supabase.from('user_roles').select('user_id, role').in('user_id', userIdsArr),
         supabase.from('user_donors').select('user_id, tier, nickname_color').in('user_id', userIdsArr),
@@ -202,6 +204,7 @@ export function OnlineUsersWidget() {
           nickname_color: donorMap.get(c.user_id)?.nickname_color || null,
           profile_primary_color: p?.profile_primary_color || null,
           profile_accent_color: p?.profile_accent_color || null,
+          profile_emoji: p?.profile_emoji || null,
         });
       });
 
@@ -220,6 +223,7 @@ export function OnlineUsersWidget() {
           nickname_color: donorMap.get(w.author_id)?.nickname_color || null,
           profile_primary_color: p?.profile_primary_color || null,
           profile_accent_color: p?.profile_accent_color || null,
+          profile_emoji: p?.profile_emoji || null,
         });
       });
 
@@ -268,6 +272,7 @@ export function OnlineUsersWidget() {
                           customColor={activity.nickname_color}
                           profilePrimaryColor={activity.profile_primary_color}
                           profileAccentColor={activity.profile_accent_color}
+                          profileEmoji={activity.profile_emoji}
                           className="text-xs sm:text-sm font-medium"
                           showBadge
                         />
@@ -321,6 +326,7 @@ export function OnlineUsersWidget() {
                   customColor={u.nickname_color}
                   profilePrimaryColor={u.profile?.profile_primary_color}
                   profileAccentColor={u.profile?.profile_accent_color}
+                  profileEmoji={u.profile?.profile_emoji}
                   className="text-[10px] sm:text-xs"
                 />
                 {i < Math.min(onlineUsers.length, 10) - 1 && (

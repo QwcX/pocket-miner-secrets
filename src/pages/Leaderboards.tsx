@@ -22,6 +22,9 @@ interface TopUser {
   projectsCount?: number;
   totalDownloads?: number;
   donorTier?: DonorTier;
+  profileEmoji?: string | null;
+  profilePrimaryColor?: string | null;
+  profileAccentColor?: string | null;
 }
 
 export default function Leaderboards() {
@@ -34,7 +37,7 @@ export default function Leaderboards() {
         .select(`
           user_id,
           points,
-          profiles:user_id(id, username, avatar_url)
+          profiles:user_id(id, username, avatar_url, profile_emoji, profile_primary_color, profile_accent_color)
         `)
         .order('points', { ascending: false })
         .limit(10);
@@ -56,6 +59,9 @@ export default function Leaderboards() {
         avatar_url: (d.profiles as any)?.avatar_url,
         reputation: d.points,
         donorTier: donorMap.get(d.user_id) || 'none' as DonorTier,
+        profileEmoji: (d.profiles as any)?.profile_emoji || null,
+        profilePrimaryColor: (d.profiles as any)?.profile_primary_color || null,
+        profileAccentColor: (d.profiles as any)?.profile_accent_color || null,
       })) || [];
     },
   });
@@ -87,7 +93,7 @@ export default function Leaderboards() {
       // Get profile data
       const { data: profiles } = await supabase
         .from('profiles')
-        .select('id, username, avatar_url')
+        .select('id, username, avatar_url, profile_emoji, profile_primary_color, profile_accent_color')
         .in('id', topUserIds);
       
       const { data: donorData } = await supabase
@@ -104,6 +110,9 @@ export default function Leaderboards() {
         avatar_url: profileMap.get(id)?.avatar_url,
         projectsCount: counts[id],
         donorTier: donorMap.get(id) || 'none' as DonorTier,
+        profileEmoji: profileMap.get(id)?.profile_emoji || null,
+        profilePrimaryColor: profileMap.get(id)?.profile_primary_color || null,
+        profileAccentColor: profileMap.get(id)?.profile_accent_color || null,
       }));
     },
   });
@@ -155,6 +164,9 @@ export default function Leaderboards() {
             username={user.username} 
             userId={user.id} 
             donorTier={user.donorTier}
+            profileEmoji={user.profileEmoji}
+            profilePrimaryColor={user.profilePrimaryColor}
+            profileAccentColor={user.profileAccentColor}
             asLink={false}
           />
           {user.donorTier && user.donorTier !== 'none' && (
