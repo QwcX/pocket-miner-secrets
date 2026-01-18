@@ -542,9 +542,9 @@ export default function Profile() {
                   {canEditEmoji ? (
                     <div className="space-y-3">
                       <p className="text-sm text-muted-foreground">
-                        Эмодзи отображается рядом с вашим ником на сайте.
+                        Эмодзи отображается рядом с вашим ником на сайте. Можете загрузить своё изображение или выбрать эмодзи.
                       </p>
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-3 flex-wrap">
                         <div className="relative">
                           <Button
                             type="button"
@@ -552,7 +552,15 @@ export default function Profile() {
                             className="glass-button w-14 h-14 text-2xl"
                             onClick={() => setShowEmojiPicker(!showEmojiPicker)}
                           >
-                            {formData.profile_emoji || <Smile className="w-6 h-6 text-muted-foreground" />}
+                            {formData.profile_emoji ? (
+                              formData.profile_emoji.startsWith('http') ? (
+                                <img src={formData.profile_emoji} alt="emoji" className="w-8 h-8 object-contain" />
+                              ) : (
+                                formData.profile_emoji
+                              )
+                            ) : (
+                              <Smile className="w-6 h-6 text-muted-foreground" />
+                            )}
                           </Button>
                           {showEmojiPicker && (
                             <div className="absolute z-50 top-full mt-2" onClick={(e) => e.stopPropagation()}>
@@ -565,13 +573,45 @@ export default function Profile() {
                             </div>
                           )}
                         </div>
-                        <Input
-                          value={formData.profile_emoji}
-                          onChange={(e) => setFormData({ ...formData, profile_emoji: e.target.value })}
-                          placeholder="Введите эмодзи"
-                          className="glass-input w-32"
-                          maxLength={4}
-                        />
+                        
+                        {/* Custom emoji upload */}
+                        <label className="cursor-pointer">
+                          <Button variant="outline" className="glass-button" asChild>
+                            <span className="flex items-center gap-2">
+                              <Camera className="w-4 h-4" />
+                              Загрузить своё
+                            </span>
+                          </Button>
+                          <input
+                            type="file"
+                            accept="image/png,image/gif,image/webp"
+                            className="hidden"
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (!file || !user?.id) return;
+                              
+                              const ext = file.name.split('.').pop()?.toLowerCase();
+                              const filePath = `${user.id}/profile-emoji.${ext}`;
+                              
+                              const { error: uploadError } = await supabase.storage
+                                .from('avatars')
+                                .upload(filePath, file, { upsert: true });
+                              
+                              if (uploadError) {
+                                toast({ title: 'Ошибка загрузки', variant: 'destructive' });
+                                return;
+                              }
+                              
+                              const { data: { publicUrl } } = supabase.storage
+                                .from('avatars')
+                                .getPublicUrl(filePath);
+                              
+                              setFormData({ ...formData, profile_emoji: publicUrl });
+                              toast({ title: 'Эмодзи загружен! Сохраните профиль.' });
+                            }}
+                          />
+                        </label>
+                        
                         {formData.profile_emoji && (
                           <Button
                             type="button"
@@ -583,6 +623,9 @@ export default function Profile() {
                           </Button>
                         )}
                       </div>
+                      <p className="text-xs text-muted-foreground">
+                        Рекомендуемый размер: 64x64px, формат: PNG, GIF или WebP
+                      </p>
                     </div>
                   ) : (
                     <div className="p-6 rounded-lg bg-secondary/20 border border-border/30 text-center">

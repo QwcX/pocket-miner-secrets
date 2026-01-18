@@ -86,7 +86,8 @@ export default function Project() {
     queryFn: async () => {
       if (!project?.author_id) return null;
       
-      const [roleResult, donorResult] = await Promise.all([
+      const [profileResult, roleResult, donorResult] = await Promise.all([
+        supabase.from('profiles').select('profile_primary_color, profile_accent_color, profile_emoji').eq('id', project.author_id).maybeSingle(),
         supabase.from('user_roles').select('role').eq('user_id', project.author_id),
         supabase.from('user_donors').select('tier, nickname_color').eq('user_id', project.author_id).maybeSingle(),
       ]);
@@ -100,6 +101,9 @@ export default function Project() {
         role: highestRole,
         donorTier: (donorResult.data?.tier as DonorTier) || 'none',
         nicknameColor: donorResult.data?.nickname_color || null,
+        profilePrimaryColor: profileResult.data?.profile_primary_color || null,
+        profileAccentColor: profileResult.data?.profile_accent_color || null,
+        profileEmoji: profileResult.data?.profile_emoji || null,
       };
     },
     enabled: !!project?.author_id,
@@ -379,6 +383,9 @@ export default function Project() {
                         role={authorInfo?.role}
                         donorTier={authorInfo?.donorTier}
                         customColor={authorInfo?.nicknameColor}
+                        profilePrimaryColor={authorInfo?.profilePrimaryColor}
+                        profileAccentColor={authorInfo?.profileAccentColor}
+                        profileEmoji={authorInfo?.profileEmoji}
                       />
                       {authorInfo?.donorTier && authorInfo.donorTier !== 'none' && (
                         <DonorBadge tier={authorInfo.donorTier} size="sm" />
@@ -486,6 +493,7 @@ export default function Project() {
                                 customColor={c.nickname_color}
                                 profilePrimaryColor={c.profiles?.profile_primary_color}
                                 profileAccentColor={c.profiles?.profile_accent_color}
+                                profileEmoji={c.profiles?.profile_emoji}
                               />
                               {c.donor_tier && c.donor_tier !== 'none' && (
                                 <DonorBadge tier={c.donor_tier} size="sm" />
