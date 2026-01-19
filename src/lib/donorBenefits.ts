@@ -9,7 +9,98 @@ export interface DonorBenefit {
   icon?: string;
 }
 
-export const DONOR_BENEFITS: DonorBenefit[] = [
+// Structured benefits config for each tier
+export interface DonorBenefitConfig {
+  canCustomizeNickname: boolean;
+  canSetProfileEmoji: boolean;
+  canUploadCustomEmoji: boolean;
+  rateLimitMultiplier: number;
+  supportPriority: number;
+  maxProjectsPerDay: number;
+  maxFileSizeMB: number;
+}
+
+// Full config for each tier
+export const DONOR_TIER_CONFIG: Record<DonorTier, DonorBenefitConfig> = {
+  none: {
+    canCustomizeNickname: false,
+    canSetProfileEmoji: false,
+    canUploadCustomEmoji: false,
+    rateLimitMultiplier: 1.0,
+    supportPriority: 0,
+    maxProjectsPerDay: 5,
+    maxFileSizeMB: 50,
+  },
+  iron: {
+    canCustomizeNickname: true,
+    canSetProfileEmoji: false,
+    canUploadCustomEmoji: false,
+    rateLimitMultiplier: 0.9,
+    supportPriority: 10,
+    maxProjectsPerDay: 7,
+    maxFileSizeMB: 75,
+  },
+  bronze: {
+    canCustomizeNickname: true,
+    canSetProfileEmoji: false,
+    canUploadCustomEmoji: false,
+    rateLimitMultiplier: 0.8,
+    supportPriority: 15,
+    maxProjectsPerDay: 8,
+    maxFileSizeMB: 100,
+  },
+  silver: {
+    canCustomizeNickname: true,
+    canSetProfileEmoji: false,
+    canUploadCustomEmoji: false,
+    rateLimitMultiplier: 0.7,
+    supportPriority: 20,
+    maxProjectsPerDay: 10,
+    maxFileSizeMB: 125,
+  },
+  gold: {
+    canCustomizeNickname: true,
+    canSetProfileEmoji: true,
+    canUploadCustomEmoji: true,
+    rateLimitMultiplier: 0.6,
+    supportPriority: 40,
+    maxProjectsPerDay: 15,
+    maxFileSizeMB: 150,
+  },
+  diamond: {
+    canCustomizeNickname: true,
+    canSetProfileEmoji: true,
+    canUploadCustomEmoji: true,
+    rateLimitMultiplier: 0.5,
+    supportPriority: 60,
+    maxProjectsPerDay: 20,
+    maxFileSizeMB: 200,
+  },
+  emerald: {
+    canCustomizeNickname: true,
+    canSetProfileEmoji: true,
+    canUploadCustomEmoji: true,
+    rateLimitMultiplier: 0.4,
+    supportPriority: 80,
+    maxProjectsPerDay: 30,
+    maxFileSizeMB: 300,
+  },
+  sponsor: {
+    canCustomizeNickname: true,
+    canSetProfileEmoji: true,
+    canUploadCustomEmoji: true,
+    rateLimitMultiplier: 0.25,
+    supportPriority: 100,
+    maxProjectsPerDay: 50,
+    maxFileSizeMB: 500,
+  },
+};
+
+// Alias for backwards compatibility
+export const DONOR_BENEFITS = DONOR_TIER_CONFIG;
+
+// Legacy array of benefits for display
+export const DONOR_BENEFITS_LIST: DonorBenefit[] = [
   // Iron benefits
   { id: 'nickname_color', name: 'Кастомный цвет ника', description: 'Установите свой цвет никнейма', minTier: 'iron' },
   { id: 'reduced_rate_limit_10', name: 'Сниженные лимиты -10%', description: 'Меньше ожидания между действиями', minTier: 'iron' },
@@ -52,21 +143,17 @@ export function hasBenefit(userTier: DonorTier, benefitMinTier: DonorTier): bool
 
 // Get all benefits available for a tier
 export function getBenefitsForTier(tier: DonorTier): DonorBenefit[] {
-  return DONOR_BENEFITS.filter(benefit => hasBenefit(tier, benefit.minTier));
+  return DONOR_BENEFITS_LIST.filter(benefit => hasBenefit(tier, benefit.minTier));
+}
+
+// Get donor benefits config for a tier
+export function getDonorBenefits(tier: DonorTier): DonorBenefitConfig {
+  return DONOR_TIER_CONFIG[tier] || DONOR_TIER_CONFIG.none;
 }
 
 // Get rate limit multiplier for a tier (lower = faster)
 export function getRateLimitMultiplier(tier: DonorTier): number {
-  switch (tier) {
-    case 'sponsor': return 0.25; // 75% reduction
-    case 'emerald': return 0.40; // 60% reduction
-    case 'diamond': return 0.50; // 50% reduction
-    case 'gold': return 0.60; // 40% reduction
-    case 'silver': return 0.70; // 30% reduction
-    case 'bronze': return 0.80; // 20% reduction
-    case 'iron': return 0.90; // 10% reduction
-    default: return 1.0; // No reduction
-  }
+  return DONOR_TIER_CONFIG[tier]?.rateLimitMultiplier || 1.0;
 }
 
 // Get benefits grouped by tier for display
@@ -82,7 +169,7 @@ export function getBenefitsByTier(): Record<DonorTier, DonorBenefit[]> {
     sponsor: [],
   };
   
-  DONOR_BENEFITS.forEach(benefit => {
+  DONOR_BENEFITS_LIST.forEach(benefit => {
     result[benefit.minTier].push(benefit);
   });
   

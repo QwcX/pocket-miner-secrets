@@ -559,6 +559,83 @@ export type Database = {
         }
         Relationships: []
       }
+      support_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_bot_response: boolean
+          is_system_message: boolean
+          sender_id: string | null
+          ticket_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          is_bot_response?: boolean
+          is_system_message?: boolean
+          sender_id?: string | null
+          ticket_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_bot_response?: boolean
+          is_system_message?: boolean
+          sender_id?: string | null
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_messages_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_tickets: {
+        Row: {
+          assigned_to: string | null
+          created_at: string
+          donor_tier: Database["public"]["Enums"]["donor_tier"]
+          id: string
+          priority: number
+          resolved_at: string | null
+          status: string
+          subject: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          created_at?: string
+          donor_tier?: Database["public"]["Enums"]["donor_tier"]
+          id?: string
+          priority?: number
+          resolved_at?: string | null
+          status?: string
+          subject: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assigned_to?: string | null
+          created_at?: string
+          donor_tier?: Database["public"]["Enums"]["donor_tier"]
+          id?: string
+          priority?: number
+          resolved_at?: string | null
+          status?: string
+          subject?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_donors: {
         Row: {
           created_at: string | null
@@ -655,6 +732,10 @@ export type Database = {
       }
       get_role_priority: {
         Args: { role_name: Database["public"]["Enums"]["app_role"] }
+        Returns: number
+      }
+      get_ticket_priority: {
+        Args: { tier: Database["public"]["Enums"]["donor_tier"] }
         Returns: number
       }
       get_user_donor_tier: {
