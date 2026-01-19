@@ -49,6 +49,8 @@ const App = () => (
                 <Route path="/messages" element={<Messages />} />
                 <Route path="/messages/:recipientId" element={<Messages />} />
                 <Route path="/admin" element={<Admin />} />
+                <Route path="/support" element={<Support />} />
+                <Route path="/donate" element={<Donate />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
