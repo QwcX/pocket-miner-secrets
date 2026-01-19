@@ -20,6 +20,8 @@ import Leaderboards from "./pages/Leaderboards";
 import Messages from "./pages/Messages";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
+import Support from "./pages/Support";
+import Donate from "./pages/Donate";
 
 const queryClient = new QueryClient();
 
