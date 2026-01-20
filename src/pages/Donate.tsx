@@ -139,28 +139,27 @@ function TierCard({ tier, benefits, index }: { tier: DonorTier; benefits: DonorB
             />
           )}
           
-          <BenefitItem 
-            icon={<Clock className="h-4 w-4" />} 
-            text={`-${Math.round((1 - benefits.rateLimitMultiplier) * 100)}% к ограничениям`} 
-          />
-          
-          <BenefitItem 
-            icon={<MessageSquare className="h-4 w-4" />} 
-            text={`Приоритет поддержки: ${benefits.supportPriority}`} 
-          />
-          
-          {benefits.maxProjectsPerDay > 5 && (
+          {benefits.rateLimitMultiplier < 1 && (
             <BenefitItem 
-              icon={<Zap className="h-4 w-4 text-primary" />} 
-              text={`До ${benefits.maxProjectsPerDay} проектов/день` }
+              icon={<Clock className="h-4 w-4 text-primary" />} 
+              text={`-${Math.round((1 - benefits.rateLimitMultiplier) * 100)}% к ожиданию`} 
               highlight
             />
           )}
           
-          {benefits.maxFileSizeMB > 50 && (
+          {benefits.supportPriority > 0 && (
             <BenefitItem 
-              icon={<Upload className="h-4 w-4" />} 
-              text={`Файлы до ${benefits.maxFileSizeMB} МБ`} 
+              icon={<MessageSquare className="h-4 w-4 text-primary" />} 
+              text={`Приоритет поддержки +${benefits.supportPriority}`} 
+              highlight
+            />
+          )}
+          
+          {benefits.maxProjectsPerDay > 5 && (
+            <BenefitItem 
+              icon={<Zap className="h-4 w-4 text-primary" />} 
+              text={`До ${benefits.maxProjectsPerDay} проектов/день`}
+              highlight
             />
           )}
         </div>
@@ -196,26 +195,31 @@ export default function Donate() {
         </div>
 
         {/* Benefits Overview */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
-          <Card className="text-center p-4">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-12">
+          <Card className="text-center p-4 hover:shadow-lg transition-shadow">
             <Palette className="h-8 w-8 mx-auto mb-2 text-primary" />
             <p className="font-medium">Цветные ники</p>
             <p className="text-xs text-muted-foreground">от Iron</p>
           </Card>
-          <Card className="text-center p-4">
+          <Card className="text-center p-4 hover:shadow-lg transition-shadow">
+            <Clock className="h-8 w-8 mx-auto mb-2 text-primary" />
+            <p className="font-medium">Меньше ожидания</p>
+            <p className="text-xs text-muted-foreground">от Iron -10%</p>
+          </Card>
+          <Card className="text-center p-4 hover:shadow-lg transition-shadow">
+            <MessageSquare className="h-8 w-8 mx-auto mb-2 text-primary" />
+            <p className="font-medium">Приоритет поддержки</p>
+            <p className="text-xs text-muted-foreground">от Iron +1</p>
+          </Card>
+          <Card className="text-center p-4 hover:shadow-lg transition-shadow">
             <Smile className="h-8 w-8 mx-auto mb-2 text-primary" />
             <p className="font-medium">Эмодзи профиля</p>
             <p className="text-xs text-muted-foreground">от Gold</p>
           </Card>
-          <Card className="text-center p-4">
+          <Card className="text-center p-4 hover:shadow-lg transition-shadow">
             <Zap className="h-8 w-8 mx-auto mb-2 text-primary" />
-            <p className="font-medium">Быстрее загрузка</p>
-            <p className="text-xs text-muted-foreground">все уровни</p>
-          </Card>
-          <Card className="text-center p-4">
-            <MessageSquare className="h-8 w-8 mx-auto mb-2 text-primary" />
-            <p className="font-medium">VIP поддержка</p>
-            <p className="text-xs text-muted-foreground">приоритет</p>
+            <p className="font-medium">Больше проектов</p>
+            <p className="text-xs text-muted-foreground">от Diamond</p>
           </Card>
         </div>
 
