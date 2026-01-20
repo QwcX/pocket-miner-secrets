@@ -9,11 +9,12 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { User, Loader2, Save, Camera, ImagePlus, X, Lock, Smile } from 'lucide-react';
+import { User, Loader2, Save, Camera, ImagePlus, X, Lock, Smile, Crown } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { DonorTier, canCustomizeNickname, canSetProfileEmoji, DONOR_TIER_LABELS } from '@/types/database';
 import { EmojiPicker } from '@/components/EmojiPicker';
+import { DonorUpsellDialog } from '@/components/DonorUpsellDialog';
 
 const DISCORD_ICON = () => (
   <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor">
@@ -61,7 +62,8 @@ export default function Profile() {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-
+  const [showDonorUpsell, setShowDonorUpsell] = useState(false);
+  const [upsellFeature, setUpsellFeature] = useState<'nickname' | 'emoji' | 'customEmoji' | 'priority' | 'general'>('general');
   // Fetch profile
   const { data: profile, isLoading: profileLoading } = useQuery({
     queryKey: ['profile', user?.id],
@@ -339,15 +341,22 @@ export default function Profile() {
                   />
                 </div>
 
-                {/* Profile colors */}
                 <div className="border-t border-border/50 pt-6">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-medium">Цвета профиля</h3>
                     {!canEditNickColor && (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Lock className="w-4 h-4" />
-                        <span>Доступно от Iron</span>
-                      </div>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        className="text-primary"
+                        onClick={() => {
+                          setUpsellFeature('nickname');
+                          setShowDonorUpsell(true);
+                        }}
+                      >
+                        <Crown className="w-4 h-4 mr-2" />
+                        Разблокировать
+                      </Button>
                     )}
                   </div>
 
@@ -532,10 +541,18 @@ export default function Profile() {
                       Эмодзи профиля
                     </h3>
                     {!canEditEmoji && (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Lock className="w-4 h-4" />
-                        <span>Доступно от Gold</span>
-                      </div>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        className="text-primary"
+                        onClick={() => {
+                          setUpsellFeature('emoji');
+                          setShowDonorUpsell(true);
+                        }}
+                      >
+                        <Crown className="w-4 h-4 mr-2" />
+                        Разблокировать
+                      </Button>
                     )}
                   </div>
 
@@ -703,6 +720,13 @@ export default function Profile() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Donor Upsell Dialog */}
+        <DonorUpsellDialog 
+          open={showDonorUpsell} 
+          onOpenChange={setShowDonorUpsell}
+          feature={upsellFeature}
+        />
       </Layout>
     </>
   );

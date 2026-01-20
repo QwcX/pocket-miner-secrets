@@ -15,9 +15,10 @@ import { UserNickname } from '@/components/UserNickname';
 import { YouTubeEmbed, findYouTubeLinks } from '@/components/YouTubeEmbed';
 import { DonorBadge } from '@/components/DonorBadge';
 import { useRateLimit } from '@/hooks/useRateLimit';
+import { ReportDialog } from '@/components/ReportDialog';
 import { 
   Download, Star, Eye, Calendar, User, Heart, HeartOff, Crown,
-  MessageSquare, History, ArrowLeft, Send, Trash2, LogIn,
+  MessageSquare, History, ArrowLeft, Send, Trash2, LogIn, Flag,
 } from 'lucide-react';
 import { CONTENT_TYPE_LABELS, CONTENT_TYPE_COLORS, ProjectVersion, Comment, Profile, DonorTier, AppRole } from '@/types/database';
 import { cn } from '@/lib/utils';
@@ -399,30 +400,46 @@ export default function Project() {
                     <span><Star className="w-4 h-4 inline mr-1 fill-minecraft-gold text-minecraft-gold" />{rating.toFixed(1)}</span>
                   </div>
                   
-                  {canModerate && (
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="destructive" size="sm">
-                          <Trash2 className="w-4 h-4 mr-2" />
-                          Удалить проект
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Удалить проект?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Это действие нельзя отменить. Проект будет удален навсегда.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Отмена</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => deleteProjectMutation.mutate()}>
-                            Удалить
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  )}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {canModerate && (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="destructive" size="sm">
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Удалить проект
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Удалить проект?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Это действие нельзя отменить. Проект будет удален навсегда.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Отмена</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => deleteProjectMutation.mutate()}>
+                              Удалить
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    )}
+                    
+                    {/* Report button */}
+                    {user && project.author_id !== user.id && (
+                      <ReportDialog 
+                        projectId={project.id} 
+                        projectTitle={project.title}
+                        trigger={
+                          <Button variant="outline" size="sm" className="text-muted-foreground hover:text-destructive">
+                            <Flag className="h-4 w-4 mr-2" />
+                            Пожаловаться
+                          </Button>
+                        }
+                      />
+                    )}
+                  </div>
                 </div>
               </div>
 
