@@ -21,6 +21,8 @@ import {
   Crown,
   MessageSquare,
   Heart,
+  HelpCircle,
+  LifeBuoy,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -43,6 +45,7 @@ const categories = [
   { name: 'Ресурспаки', href: '/browse?type=resourcepack', icon: Palette },
   { name: 'Сборки', href: '/browse?type=build', icon: Package },
   { name: 'Конфиги', href: '/browse?type=config', icon: Settings },
+  { name: 'Помощь', href: '/forum', icon: HelpCircle },
   { name: 'Топы', href: '/leaderboards', icon: Crown },
 ];
 
@@ -198,6 +201,10 @@ export function Header({ snowflakesEnabled = true, onToggleSnowflakes }: HeaderP
                       Админ-панель
                     </DropdownMenuItem>
                   )}
+                  <DropdownMenuItem onClick={() => navigate('/support')}>
+                    <LifeBuoy className="w-4 h-4 mr-2" />
+                    Техподдержка
+                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={signOut}>
                     <LogOut className="w-4 h-4 mr-2" />

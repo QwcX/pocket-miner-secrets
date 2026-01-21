@@ -22,6 +22,8 @@ import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 import Support from "./pages/Support";
 import Donate from "./pages/Donate";
+import Forum from "./pages/Forum";
+import ForumQuestion from "./pages/ForumQuestion";
 
 const queryClient = new QueryClient();
 
@@ -51,6 +53,8 @@ const App = () => (
                 <Route path="/admin" element={<Admin />} />
                 <Route path="/support" element={<Support />} />
                 <Route path="/donate" element={<Donate />} />
+                <Route path="/forum" element={<Forum />} />
+                <Route path="/forum/:questionId" element={<ForumQuestion />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>

@@ -6,17 +6,19 @@ export interface Profile {
   id: string;
   username: string;
   avatar_url: string | null;
-  banner_url: string | null;
-  bio: string | null;
-  discord_username: string | null;
-  telegram_username: string | null;
-  profile_primary_color: string | null;
-  profile_accent_color: string | null;
-  profile_emoji: string | null;
-  last_seen_at: string | null;
-  created_at: string;
-  updated_at: string;
+  banner_url?: string | null;
+  bio?: string | null;
+  discord_username?: string | null;
+  telegram_username?: string | null;
+  profile_primary_color?: string | null;
+  profile_accent_color?: string | null;
+  profile_emoji?: string | null;
+  last_seen_at?: string | null;
+  created_at?: string;
+  updated_at?: string;
 }
+
+export type PriceType = 'leak' | 'free' | 'paid';
 
 export interface Project {
   id: string;
@@ -31,12 +33,57 @@ export interface Project {
   download_url: string | null;
   is_premium: boolean;
   price: number;
+  price_type: PriceType;
+  min_donor_tier: DonorTier | null;
   downloads_count: number;
   views_count: number;
   is_approved: boolean;
   created_at: string;
   updated_at: string;
-  profiles?: Profile;
+  profiles?: Profile | null;
+}
+
+export interface ForumQuestion {
+  id: string;
+  author_id: string;
+  title: string;
+  content: string;
+  tags: string[];
+  is_solved: boolean;
+  solution_id: string | null;
+  views_count: number;
+  created_at: string;
+  updated_at: string;
+  profiles?: Profile | null;
+  answers_count?: number;
+}
+
+export interface ForumAnswer {
+  id: string;
+  question_id: string;
+  author_id: string;
+  content: string;
+  is_solution: boolean;
+  helpful_count: number;
+  not_helpful_count: number;
+  created_at: string;
+  updated_at: string;
+  profiles?: Profile | null;
+  user_vote?: boolean | null;
+}
+
+export interface PurchaseRequest {
+  id: string;
+  project_id: string;
+  buyer_id: string;
+  seller_id: string;
+  status: 'pending' | 'approved' | 'rejected' | 'completed';
+  message: string | null;
+  referral_source: string | null;
+  created_at: string;
+  updated_at: string;
+  projects?: Project | null;
+  buyer_profile?: Profile | null;
 }
 
 export interface ProjectVersion {
