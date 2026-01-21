@@ -12,6 +12,7 @@ import { Helmet } from 'react-helmet-async';
 import { supabase } from '@/integrations/supabase/client';
 import { SimpleCaptcha } from '@/components/SimpleCaptcha';
 import { useRateLimit } from '@/hooks/useRateLimit';
+import { useReCaptcha } from '@/components/ReCaptcha';
 
 const signUpSchema = z.object({
   username: z.string().min(3, 'Минимум 3 символа').max(20, 'Максимум 20 символов').regex(/^[a-zA-Z0-9_]+$/, 'Только буквы, цифры и _'),
@@ -53,6 +54,7 @@ export default function Auth() {
   const { toast } = useToast();
 
   const { checkRateLimit } = useRateLimit();
+  const { executeReCaptcha } = useReCaptcha();
   
   const [mode, setMode] = useState<'login' | 'signup'>(
     searchParams.get('mode') === 'signup' ? 'signup' : 'login'
@@ -107,6 +109,19 @@ export default function Auth() {
         variant: 'destructive',
       });
       return;
+    }
+
+    // reCAPTCHA v3 verification for signup
+    if (mode === 'signup') {
+      const recaptchaToken = await executeReCaptcha('signup');
+      if (!recaptchaToken) {
+        toast({
+          title: 'Ошибка проверки',
+          description: 'Не удалось проверить reCAPTCHA. Попробуйте ещё раз.',
+          variant: 'destructive',
+        });
+        return;
+      }
     }
 
     // Rate limiting check

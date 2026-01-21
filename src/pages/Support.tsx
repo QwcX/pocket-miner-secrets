@@ -17,6 +17,7 @@ import { DonorTier, DONOR_TIER_LABELS } from '@/types/database';
 import { MessageSquare, Plus, Send, CheckCircle, Bot, User, Shield, Crown } from 'lucide-react';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
+import { useReCaptcha } from '@/components/ReCaptcha';
 
 interface Ticket {
   id: string;
@@ -63,6 +64,7 @@ export default function Support() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { checkRateLimit, donorTier } = useRateLimit();
+  const { executeReCaptcha } = useReCaptcha();
   
   const [selectedTicket, setSelectedTicket] = useState<string | null>(null);
   const [newSubject, setNewSubject] = useState('');
@@ -157,6 +159,18 @@ export default function Support() {
 
   const handleCreateTicket = async () => {
     if (!newSubject.trim() || !newMessage.trim()) return;
+    
+    // reCAPTCHA v3 verification
+    const recaptchaToken = await executeReCaptcha('support_ticket');
+    if (!recaptchaToken) {
+      toast({
+        title: 'Ошибка проверки',
+        description: 'Не удалось проверить reCAPTCHA. Попробуйте ещё раз.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
     const ok = await checkRateLimit({ actionType: 'support_ticket', maxRequests: 5, windowSeconds: 3600 });
     if (ok) createTicketMutation.mutate();
   };
