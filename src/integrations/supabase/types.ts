@@ -136,6 +136,129 @@ export type Database = {
           },
         ]
       }
+      forum_answer_votes: {
+        Row: {
+          answer_id: string
+          created_at: string
+          id: string
+          is_helpful: boolean
+          voter_id: string
+        }
+        Insert: {
+          answer_id: string
+          created_at?: string
+          id?: string
+          is_helpful: boolean
+          voter_id: string
+        }
+        Update: {
+          answer_id?: string
+          created_at?: string
+          id?: string
+          is_helpful?: boolean
+          voter_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "forum_answer_votes_answer_id_fkey"
+            columns: ["answer_id"]
+            isOneToOne: false
+            referencedRelation: "forum_answers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      forum_answers: {
+        Row: {
+          author_id: string
+          content: string
+          created_at: string
+          helpful_count: number
+          id: string
+          is_solution: boolean
+          not_helpful_count: number
+          question_id: string
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          content: string
+          created_at?: string
+          helpful_count?: number
+          id?: string
+          is_solution?: boolean
+          not_helpful_count?: number
+          question_id: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          content?: string
+          created_at?: string
+          helpful_count?: number
+          id?: string
+          is_solution?: boolean
+          not_helpful_count?: number
+          question_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "forum_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "forum_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      forum_questions: {
+        Row: {
+          author_id: string
+          content: string
+          created_at: string
+          id: string
+          is_solved: boolean
+          solution_id: string | null
+          tags: string[] | null
+          title: string
+          updated_at: string
+          views_count: number
+        }
+        Insert: {
+          author_id: string
+          content: string
+          created_at?: string
+          id?: string
+          is_solved?: boolean
+          solution_id?: string | null
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+          views_count?: number
+        }
+        Update: {
+          author_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          is_solved?: boolean
+          solution_id?: string | null
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+          views_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "forum_questions_solution_id_fkey"
+            columns: ["solution_id"]
+            isOneToOne: false
+            referencedRelation: "forum_answers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       moderation_logs: {
         Row: {
           action: string
@@ -424,8 +547,10 @@ export type Database = {
           id: string
           is_approved: boolean | null
           is_premium: boolean | null
+          min_donor_tier: string | null
           minecraft_versions: string[] | null
           price: number | null
+          price_type: string
           slug: string
           tags: string[] | null
           thumbnail_url: string | null
@@ -443,8 +568,10 @@ export type Database = {
           id?: string
           is_approved?: boolean | null
           is_premium?: boolean | null
+          min_donor_tier?: string | null
           minecraft_versions?: string[] | null
           price?: number | null
+          price_type?: string
           slug: string
           tags?: string[] | null
           thumbnail_url?: string | null
@@ -462,8 +589,10 @@ export type Database = {
           id?: string
           is_approved?: boolean | null
           is_premium?: boolean | null
+          min_donor_tier?: string | null
           minecraft_versions?: string[] | null
           price?: number | null
+          price_type?: string
           slug?: string
           tags?: string[] | null
           thumbnail_url?: string | null
@@ -472,6 +601,50 @@ export type Database = {
           views_count?: number | null
         }
         Relationships: []
+      }
+      purchase_requests: {
+        Row: {
+          buyer_id: string
+          created_at: string
+          id: string
+          message: string | null
+          project_id: string
+          referral_source: string | null
+          seller_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          buyer_id: string
+          created_at?: string
+          id?: string
+          message?: string | null
+          project_id: string
+          referral_source?: string | null
+          seller_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          buyer_id?: string
+          created_at?: string
+          id?: string
+          message?: string | null
+          project_id?: string
+          referral_source?: string | null
+          seller_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_requests_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       rate_limits: {
         Row: {
@@ -636,6 +809,30 @@ export type Database = {
         }
         Relationships: []
       }
+      user_daily_downloads: {
+        Row: {
+          created_at: string
+          download_count: number
+          download_date: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          download_count?: number
+          download_date?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          download_count?: number
+          download_date?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_donors: {
         Row: {
           created_at: string | null
@@ -712,6 +909,7 @@ export type Database = {
     Functions: {
       can_customize_nickname: { Args: { p_user_id: string }; Returns: boolean }
       can_set_profile_emoji: { Args: { p_user_id: string }; Returns: boolean }
+      check_download_limit: { Args: { p_user_id: string }; Returns: boolean }
       check_rate_limit: {
         Args: {
           p_action_type: string
@@ -730,6 +928,7 @@ export type Database = {
         Args: { project_uuid: string }
         Returns: number
       }
+      get_remaining_downloads: { Args: { p_user_id: string }; Returns: number }
       get_role_priority: {
         Args: { role_name: Database["public"]["Enums"]["app_role"] }
         Returns: number
@@ -756,6 +955,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      increment_download_count: {
+        Args: { p_user_id: string }
+        Returns: undefined
       }
     }
     Enums: {
