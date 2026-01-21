@@ -20,6 +20,7 @@ import {
   Shield,
   Crown,
   MessageSquare,
+  Heart,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -126,6 +127,17 @@ export function Header({ snowflakesEnabled = true, onToggleSnowflakes }: HeaderP
 
         {/* Actions */}
         <div className="flex items-center gap-1 sm:gap-2">
+          {/* Donate button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate('/donate')}
+            className="hidden md:inline-flex gap-1 text-pink-500 hover:text-pink-400 hover:bg-pink-500/10"
+          >
+            <Heart className="w-4 h-4 fill-current" />
+            <span className="hidden lg:inline">Поддержать</span>
+          </Button>
+          
           <div className="hidden sm:flex items-center gap-1">
             {onToggleSnowflakes && (
               <SnowflakeToggle enabled={snowflakesEnabled} onToggle={onToggleSnowflakes} />
@@ -269,6 +281,16 @@ export function Header({ snowflakesEnabled = true, onToggleSnowflakes }: HeaderP
               </Link>
             ))}
           </nav>
+          
+          {/* Mobile donate button */}
+          <Link
+            to="/donate"
+            className="flex items-center gap-2 p-2.5 sm:p-3 rounded-lg text-pink-500 bg-pink-500/10 hover:bg-pink-500/20 transition-colors text-sm border border-pink-500/30"
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            <Heart className="w-4 h-4 fill-current" />
+            Поддержать проект
+          </Link>
           
           {/* Mobile quick actions when not logged in */}
           {!user && (
