@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
   Select,
   SelectContent,
@@ -27,8 +28,11 @@ import {
   Image,
   Link as LinkIcon,
   AlertCircle,
+  Lock,
+  Unlock,
+  DollarSign,
 } from 'lucide-react';
-import { ContentType, CONTENT_TYPE_LABELS } from '@/types/database';
+import { ContentType, CONTENT_TYPE_LABELS, PriceType, DonorTier, DONOR_TIER_LABELS } from '@/types/database';
 import { Helmet } from 'react-helmet-async';
 import { z } from 'zod';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -51,6 +55,23 @@ const MINECRAFT_VERSIONS = [
   '1.15.2', '1.14.4', '1.13.2', '1.12.2', '1.11.2', '1.10.2', '1.9.4', '1.8.9', '1.7.10',
 ];
 
+const PRICE_TYPE_OPTIONS: { value: PriceType; label: string; description: string; icon: React.ComponentType<any> }[] = [
+  { value: 'leak', label: 'Слив / Кряк', description: 'Утечка платного контента', icon: Unlock },
+  { value: 'free', label: 'Бесплатно', description: 'Бесплатный для всех', icon: Unlock },
+  { value: 'paid', label: 'Платно', description: 'Покупка через личные сообщения', icon: DollarSign },
+];
+
+const DONOR_TIER_OPTIONS: { value: DonorTier; label: string }[] = [
+  { value: 'none', label: 'Все пользователи' },
+  { value: 'iron', label: 'Iron и выше' },
+  { value: 'bronze', label: 'Bronze и выше' },
+  { value: 'silver', label: 'Silver и выше' },
+  { value: 'gold', label: 'Gold и выше' },
+  { value: 'diamond', label: 'Diamond и выше' },
+  { value: 'emerald', label: 'Emerald и выше' },
+  { value: 'sponsor', label: 'Только Sponsor' },
+];
+
 export default function Upload() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
@@ -65,6 +86,9 @@ export default function Upload() {
     version_number: '1.0.0',
     download_url: '',
   });
+  const [priceType, setPriceType] = useState<PriceType>('free');
+  const [minDonorTier, setMinDonorTier] = useState<DonorTier>('none');
+  const [price, setPrice] = useState<string>('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [selectedVersions, setSelectedVersions] = useState<string[]>([]);
   const [tags, setTags] = useState<string[]>([]);
@@ -166,6 +190,10 @@ export default function Upload() {
           thumbnail_url: thumbnailUrl,
           download_url: formData.download_url,
           is_approved: false, // Goes to moderation
+          price_type: priceType,
+          min_donor_tier: minDonorTier === 'none' ? null : minDonorTier,
+          price: priceType === 'paid' && price ? parseFloat(price) : null,
+          is_premium: priceType === 'paid',
         })
         .select()
         .single();
@@ -276,9 +304,81 @@ export default function Upload() {
                       ))}
                     </SelectContent>
                   </Select>
-                  {errors.content_type && (
+                {errors.content_type && (
                     <p className="text-xs text-destructive">{errors.content_type}</p>
                   )}
+                </div>
+
+                {/* Price Type - NEW SECTION */}
+                <div className="space-y-3">
+                  <Label>Тип контента *</Label>
+                  <RadioGroup 
+                    value={priceType} 
+                    onValueChange={(v) => setPriceType(v as PriceType)}
+                    className="grid grid-cols-1 sm:grid-cols-3 gap-3"
+                  >
+                    {PRICE_TYPE_OPTIONS.map((option) => (
+                      <label
+                        key={option.value}
+                        className={`flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                          priceType === option.value 
+                            ? 'border-primary bg-primary/10' 
+                            : 'border-border hover:border-muted-foreground'
+                        }`}
+                      >
+                        <RadioGroupItem value={option.value} />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <option.icon className="w-4 h-4" />
+                            <span className="font-medium text-sm">{option.label}</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-0.5">{option.description}</p>
+                        </div>
+                      </label>
+                    ))}
+                  </RadioGroup>
+                </div>
+
+                {/* Price for paid content */}
+                {priceType === 'paid' && (
+                  <div className="space-y-2">
+                    <Label htmlFor="price">Цена (₽)</Label>
+                    <Input
+                      id="price"
+                      type="number"
+                      placeholder="100"
+                      value={price}
+                      onChange={(e) => setPrice(e.target.value)}
+                      min="0"
+                      step="1"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Покупатели свяжутся с вами через личные сообщения
+                    </p>
+                  </div>
+                )}
+
+                {/* Min Donor Tier - access restriction */}
+                <div className="space-y-2">
+                  <Label>Кто может скачать</Label>
+                  <Select
+                    value={minDonorTier}
+                    onValueChange={(v) => setMinDonorTier(v as DonorTier)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {DONOR_TIER_OPTIONS.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Ограничьте доступ к скачиванию по уровню доната
+                  </p>
                 </div>
 
                 {/* Description */}
