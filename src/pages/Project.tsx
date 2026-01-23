@@ -9,18 +9,22 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { UserNickname } from '@/components/UserNickname';
 import { YouTubeEmbed, findYouTubeLinks } from '@/components/YouTubeEmbed';
 import { DonorBadge } from '@/components/DonorBadge';
 import { useRateLimit } from '@/hooks/useRateLimit';
+import { useDownloadAccess } from '@/hooks/useDownloadAccess';
 import { ReportDialog } from '@/components/ReportDialog';
 import { 
   Download, Star, Eye, Calendar, User, Heart, HeartOff, Crown,
   MessageSquare, History, ArrowLeft, Send, Trash2, LogIn, Flag,
+  Lock, ShoppingCart, AlertTriangle,
 } from 'lucide-react';
-import { CONTENT_TYPE_LABELS, CONTENT_TYPE_COLORS, ProjectVersion, Comment, Profile, DonorTier, AppRole } from '@/types/database';
+import { CONTENT_TYPE_LABELS, CONTENT_TYPE_COLORS, ProjectVersion, Comment, Profile, DonorTier, AppRole, DONOR_TIER_LABELS } from '@/types/database';
 import { cn } from '@/lib/utils';
 import { Helmet } from 'react-helmet-async';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -30,6 +34,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from '@/components/ui/dialog';
 import {
   AlertDialog,
@@ -42,6 +47,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface ExtendedComment extends Comment {
   profiles: Profile | null;
@@ -60,8 +72,17 @@ export default function Project() {
 
   const [showAuthDialog, setShowAuthDialog] = useState(false);
   const [authAction, setAuthAction] = useState('');
+  const [showPurchaseDialog, setShowPurchaseDialog] = useState(false);
+  const [purchaseMessage, setPurchaseMessage] = useState('');
+  const [referralSource, setReferralSource] = useState('');
 
   const { data: project, isLoading } = useProject(slug || '');
+  
+  // Get download access info
+  const { data: accessInfo } = useDownloadAccess(
+    project?.price_type,
+    project?.min_donor_tier
+  );
 
   // Check if current user can moderate
   const { data: userRoles } = useQuery({
@@ -311,10 +332,22 @@ export default function Project() {
   const handleDownload = async (url: string) => {
     if (!requireAuth('скачать проект')) return;
     
-    // Increment download count
+    // Check access
+    if (!accessInfo?.canDownload) {
+      toast({
+        title: 'Нет доступа к скачиванию',
+        description: accessInfo?.reason || 'Невозможно скачать',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    // Increment download counters
     if (project?.id) {
       await supabase.from('projects').update({ downloads_count: (project.downloads_count || 0) + 1 }).eq('id', project.id);
+      await supabase.rpc('increment_download_count', { p_user_id: user!.id });
       queryClient.invalidateQueries({ queryKey: ['project', slug] });
+      queryClient.invalidateQueries({ queryKey: ['download-access'] });
     }
     
     window.open(url, '_blank');
@@ -322,6 +355,14 @@ export default function Project() {
 
   const handleRate = (value: number) => {
     if (!requireAuth('оценить проект')) return;
+    if (!accessInfo?.canInteract) {
+      toast({
+        title: 'Нет доступа',
+        description: 'У вас нет доступа для оценки этого проекта',
+        variant: 'destructive',
+      });
+      return;
+    }
     rateMutation.mutate(value);
   };
 
@@ -334,7 +375,15 @@ export default function Project() {
     if (!requireAuth('оставить комментарий')) return;
     if (!commentText.trim()) return;
     
-    // Rate limit comments
+    if (!accessInfo?.canInteract) {
+      toast({
+        title: 'Нет доступа',
+        description: 'У вас нет доступа для комментирования этого проекта',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
     const allowed = await checkRateLimit({
       actionType: 'comment',
       maxRequests: 10,
@@ -343,6 +392,36 @@ export default function Project() {
     if (!allowed) return;
     
     commentMutation.mutate();
+  };
+
+  // Purchase request mutation
+  const purchaseMutation = useMutation({
+    mutationFn: async () => {
+      if (!project?.id || !user?.id) throw new Error('Not authenticated');
+      
+      const { error } = await supabase.from('purchase_requests').insert({
+        project_id: project.id,
+        buyer_id: user.id,
+        seller_id: project.author_id,
+        message: purchaseMessage.trim() || null,
+        referral_source: referralSource.trim() || null,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      setShowPurchaseDialog(false);
+      setPurchaseMessage('');
+      setReferralSource('');
+      toast({ title: 'Заявка отправлена!', description: 'Продавец свяжется с вами' });
+    },
+    onError: (error: Error) => {
+      toast({ title: 'Ошибка', description: error.message, variant: 'destructive' });
+    },
+  });
+
+  const handlePurchase = () => {
+    if (!requireAuth('оставить заявку на покупку')) return;
+    setShowPurchaseDialog(true);
   };
 
   if (isLoading) return <Layout><div className="container py-8"><Skeleton className="h-64 w-full" /></div></Layout>;
@@ -542,9 +621,62 @@ export default function Project() {
               <Card className="bg-card border-border sticky top-24">
                 <CardHeader><CardTitle className="text-lg">Скачать</CardTitle></CardHeader>
                 <CardContent className="space-y-4">
-                  {latestVersion ? (
-                    <Button className="w-full bg-primary" size="lg" onClick={() => handleDownload(latestVersion.file_url)}>
-                      <Download className="w-4 h-4 mr-2" />Скачать v{latestVersion.version_number}
+                  {/* Access restriction warning */}
+                  {accessInfo && !accessInfo.canDownload && accessInfo.reason && (
+                    <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-sm">
+                      <div className="flex items-center gap-2 text-destructive mb-1">
+                        <Lock className="w-4 h-4" />
+                        <span className="font-medium">Ограниченный доступ</span>
+                      </div>
+                      <p className="text-muted-foreground">{accessInfo.reason}</p>
+                      {accessInfo.requiredTier && accessInfo.requiredTier !== 'none' && (
+                        <p className="mt-1 text-xs">
+                          Требуется: <Badge variant="outline">{DONOR_TIER_LABELS[accessInfo.requiredTier]}</Badge>
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Download limit info */}
+                  {accessInfo && accessInfo.canDownload && !accessInfo.hasUnlimitedDownloads && accessInfo.remainingDownloads !== null && (
+                    <div className="p-2 rounded-lg bg-secondary/50 text-sm text-center">
+                      Осталось скачиваний сегодня: <span className="font-medium">{accessInfo.remainingDownloads}</span>
+                    </div>
+                  )}
+
+                  {/* Price type badge */}
+                  {project.price_type && (
+                    <div className="flex justify-center">
+                      {project.price_type === 'leak' && (
+                        <Badge className="bg-orange-500/20 text-orange-400 border-orange-500/30">Слив / Кряк</Badge>
+                      )}
+                      {project.price_type === 'paid' && (
+                        <Badge className="bg-minecraft-gold/20 text-minecraft-gold border-minecraft-gold/30">
+                          Платно: {project.price} ₽
+                        </Badge>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Download or Purchase button */}
+                  {project.price_type === 'paid' ? (
+                    <Button 
+                      className="w-full" 
+                      size="lg" 
+                      onClick={handlePurchase}
+                    >
+                      <ShoppingCart className="w-4 h-4 mr-2" />
+                      Написать продавцу
+                    </Button>
+                  ) : latestVersion ? (
+                    <Button 
+                      className="w-full bg-primary" 
+                      size="lg" 
+                      onClick={() => handleDownload(latestVersion.file_url)}
+                      disabled={!accessInfo?.canDownload}
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Скачать v{latestVersion.version_number}
                     </Button>
                   ) : (
                     <p className="text-sm text-muted-foreground text-center">Нет файлов</p>
@@ -555,11 +687,19 @@ export default function Project() {
                       <p className="text-sm font-medium text-muted-foreground mb-2">Оценка</p>
                       <div className="flex gap-1">
                         {[1,2,3,4,5].map(v => (
-                          <button key={v} onClick={() => handleRate(v)}>
+                          <button 
+                            key={v} 
+                            onClick={() => handleRate(v)}
+                            disabled={!accessInfo?.canInteract}
+                            className="disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
                             <Star className={cn("w-6 h-6", (userRating||0) >= v ? "fill-minecraft-gold text-minecraft-gold" : "text-muted-foreground")} />
                           </button>
                         ))}
                       </div>
+                      {!accessInfo?.canInteract && (
+                        <p className="text-xs text-muted-foreground mt-1">Нет доступа для оценки</p>
+                      )}
                     </div>
                     <Button variant="outline" className="w-full" onClick={handleFavorite}>
                       {isFavorite ? <><HeartOff className="w-4 h-4 mr-2" />Убрать</> : <><Heart className="w-4 h-4 mr-2" />В избранное</>}
@@ -589,6 +729,56 @@ export default function Project() {
                 Регистрация
               </Button>
             </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Purchase Dialog */}
+        <Dialog open={showPurchaseDialog} onOpenChange={setShowPurchaseDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Заявка на покупку</DialogTitle>
+              <DialogDescription>
+                Отправьте заявку продавцу, чтобы обсудить покупку "{project?.title}"
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 mt-4">
+              <div>
+                <Label>Откуда вы узнали о проекте?</Label>
+                <Select value={referralSource} onValueChange={setReferralSource}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Выберите источник" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="search">Поиск на сайте</SelectItem>
+                    <SelectItem value="youtube">YouTube</SelectItem>
+                    <SelectItem value="discord">Discord</SelectItem>
+                    <SelectItem value="telegram">Telegram</SelectItem>
+                    <SelectItem value="friend">От друга</SelectItem>
+                    <SelectItem value="forum">Форум</SelectItem>
+                    <SelectItem value="other">Другое</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Сообщение продавцу (необязательно)</Label>
+                <Textarea
+                  className="mt-1"
+                  placeholder="Напишите что-нибудь продавцу..."
+                  value={purchaseMessage}
+                  onChange={e => setPurchaseMessage(e.target.value)}
+                  rows={3}
+                />
+              </div>
+            </div>
+            <DialogFooter className="mt-4">
+              <Button variant="outline" onClick={() => setShowPurchaseDialog(false)}>
+                Отмена
+              </Button>
+              <Button onClick={() => purchaseMutation.mutate()} disabled={purchaseMutation.isPending}>
+                <ShoppingCart className="w-4 h-4 mr-2" />
+                Отправить заявку
+              </Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       </Layout>

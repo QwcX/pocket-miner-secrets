@@ -241,6 +241,10 @@ export function Header({ snowflakesEnabled = true, onToggleSnowflakes }: HeaderP
                     <Blocks className="w-4 h-4 mr-2" />
                     Мои проекты
                   </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/seller-requests')}>
+                    <Package className="w-4 h-4 mr-2" />
+                    Заявки на покупку
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate('/upload')} className="sm:hidden">
                     <Upload className="w-4 h-4 mr-2" />
                     Загрузить
