@@ -24,6 +24,8 @@ import Support from "./pages/Support";
 import Donate from "./pages/Donate";
 import Forum from "./pages/Forum";
 import ForumQuestion from "./pages/ForumQuestion";
+import SellerRequests from "./pages/SellerRequests";
+import OrderChat from "./pages/OrderChat";
 
 const queryClient = new QueryClient();
 
@@ -55,6 +57,8 @@ const App = () => (
                 <Route path="/donate" element={<Donate />} />
                 <Route path="/forum" element={<Forum />} />
                 <Route path="/forum/:questionId" element={<ForumQuestion />} />
+                <Route path="/seller-requests" element={<SellerRequests />} />
+                <Route path="/order/:requestId" element={<OrderChat />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
