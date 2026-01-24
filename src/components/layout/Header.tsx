@@ -299,6 +299,10 @@ export function Header({ snowflakesEnabled = true, onToggleSnowflakes }: HeaderP
                         <Shield className="w-4 h-4 mr-2" />
                         Модерация
                       </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/chat/moderation')}>
+                        <MessageSquare className="w-4 h-4 mr-2" />
+                        Модерация чата
+                      </DropdownMenuItem>
                     </>
                   )}
                   {isAdmin && (

@@ -1,27 +1,32 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth';
 import { Layout } from '@/components/layout/Layout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { UserNickname } from '@/components/UserNickname';
 import { EmojiPicker } from '@/components/EmojiPicker';
 import { useToast } from '@/hooks/use-toast';
 import { useRateLimit } from '@/hooks/useRateLimit';
 import { Helmet } from 'react-helmet-async';
+import { cn } from '@/lib/utils';
 import { 
   Send, 
   MessageCircle, 
-  Users,
   Trash2,
   Loader2,
+  Bold,
+  Italic,
+  LinkIcon,
+  ImageIcon,
+  Smile,
+  Settings,
+  MessagesSquare,
 } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
+import { format, isToday, isYesterday } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { DonorTier, AppRole, Profile } from '@/types/database';
 
@@ -36,13 +41,26 @@ interface ChatMessage {
   nickname_color?: string | null;
 }
 
-// Component to render message content with emoji support
+// Component to render message content with emoji and mention support
 const MessageContent = ({ content }: { content: string }) => {
-  const parts = content.split(/(\[emoji:[^\]]+\])/g);
+  // Parse @mentions and emojis
+  const parts = content.split(/(@\w+|\[emoji:[^\]]+\])/g);
   
   return (
     <span className="break-words whitespace-pre-wrap">
       {parts.map((part, index) => {
+        // Check for mention
+        if (part.startsWith('@')) {
+          return (
+            <span 
+              key={index} 
+              className="text-primary font-medium bg-primary/10 px-1 rounded"
+            >
+              {part}
+            </span>
+          );
+        }
+        // Check for emoji
         const emojiMatch = part.match(/\[emoji:([^\]]+)\]/);
         if (emojiMatch) {
           return (
@@ -60,8 +78,26 @@ const MessageContent = ({ content }: { content: string }) => {
   );
 };
 
+// Format timestamp like reference
+const formatMessageTime = (date: Date) => {
+  if (isToday(date)) {
+    return `Сегодня в ${format(date, 'HH:mm')}`;
+  }
+  if (isYesterday(date)) {
+    return `Вчера в ${format(date, 'HH:mm')}`;
+  }
+  return format(date, 'd MMM в HH:mm', { locale: ru });
+};
+
+// Forum sidebar sections
+const forumSections = [
+  { name: 'Общий чат', href: '/chat', icon: MessagesSquare },
+  { name: 'Форум Q&A', href: '/forum', icon: MessageCircle },
+];
+
 export default function GlobalChat() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
   const { checkRateLimit } = useRateLimit();
@@ -128,7 +164,7 @@ export default function GlobalChat() {
         nickname_color: donorMap.get(msg.user_id)?.nickname_color || null,
       })) as ChatMessage[];
     },
-    refetchInterval: 5000, // Auto-refresh every 5 seconds
+    refetchInterval: 5000,
   });
 
   // Send message mutation
@@ -222,128 +258,165 @@ export default function GlobalChat() {
   return (
     <>
       <Helmet>
-        <title>Общий чат | TestLeak</title>
+        <title>БлэкЧат | TestLeak</title>
       </Helmet>
       <Layout>
         <div className="container py-6">
-          <Card className="h-[calc(100vh-12rem)]">
-            <CardHeader className="border-b border-border py-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-primary/10">
-                    <MessageCircle className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-lg">Общий чат</CardTitle>
-                    <p className="text-sm text-muted-foreground">Общайтесь с другими игроками</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Users className="w-4 h-4" />
-                  <span>Онлайн</span>
-                </div>
-              </div>
-            </CardHeader>
+          {/* Header like reference */}
+          <div className="mb-6 border-b border-border pb-4">
+            <h1 className="text-2xl font-bold text-foreground">
+              TestLeak.com — лучшее для сервера Майнкрафт!
+            </h1>
+          </div>
 
-            <div className="flex flex-col h-[calc(100%-5rem)]">
-              <ScrollArea className="flex-1 p-4">
-                <div className="space-y-3">
-                  {isLoading ? (
-                    <div className="flex justify-center py-8">
-                      <Loader2 className="w-6 h-6 animate-spin" />
-                    </div>
-                  ) : messages.length === 0 ? (
-                    <div className="text-center py-8">
-                      <MessageCircle className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
-                      <p className="text-muted-foreground">Чат пока пуст. Напишите первым!</p>
-                    </div>
-                  ) : (
-                    messages.map(msg => (
-                      <div 
-                        key={msg.id} 
-                        className={`flex gap-3 group hover:bg-secondary/30 p-2 rounded-lg transition-colors ${
-                          msg.user_id === user?.id ? 'bg-primary/5' : ''
-                        }`}
-                      >
-                        <Avatar className="w-9 h-9 flex-shrink-0">
-                          <AvatarImage src={msg.profile?.avatar_url || undefined} />
-                          <AvatarFallback className="text-xs">
-                            {msg.profile?.username?.charAt(0).toUpperCase() || 'U'}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <UserNickname
-                              username={msg.profile?.username || 'Unknown'}
-                              userId={msg.user_id}
-                              role={msg.user_role}
-                              donorTier={msg.donor_tier}
-                              customColor={msg.nickname_color}
-                              profilePrimaryColor={msg.profile?.profile_primary_color}
-                              profileAccentColor={msg.profile?.profile_accent_color}
-                              profileEmoji={msg.profile?.profile_emoji}
-                            />
-                            <span className="text-xs text-muted-foreground">
-                              {formatDistanceToNow(new Date(msg.created_at), { addSuffix: true, locale: ru })}
-                            </span>
-                            
-                            {/* Delete button */}
-                            {(msg.user_id === user?.id || isStaff) && (
-                              <button 
-                                onClick={() => deleteMutation.mutate(msg.id)}
-                                className="opacity-0 group-hover:opacity-100 transition-opacity ml-auto"
-                              >
-                                <Trash2 className="w-4 h-4 text-destructive hover:text-destructive/80" />
-                              </button>
-                            )}
-                          </div>
-                          <div className="text-sm mt-0.5">
+          {/* Chat container with sidebar navigation */}
+          <div className="bg-card border border-border rounded-lg overflow-hidden">
+            {/* Chat header */}
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-secondary/30">
+              <div className="flex items-center gap-2">
+                <MessagesSquare className="w-5 h-5 text-primary" />
+                <span className="font-semibold">БлэкЧат</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="icon" className="w-8 h-8">
+                  <Settings className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+
+            {/* Messages area */}
+            <ScrollArea className="h-[calc(100vh-24rem)]">
+              <div className="p-4 space-y-4">
+                {isLoading ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="w-6 h-6 animate-spin" />
+                  </div>
+                ) : messages.length === 0 ? (
+                  <div className="text-center py-8">
+                    <MessageCircle className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
+                    <p className="text-muted-foreground">Чат пока пуст. Напишите первым!</p>
+                  </div>
+                ) : (
+                  messages.map(msg => (
+                    <div 
+                      key={msg.id} 
+                      className="group flex gap-2"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-baseline gap-2 flex-wrap">
+                          <UserNickname
+                            username={msg.profile?.username || 'Unknown'}
+                            userId={msg.user_id}
+                            role={msg.user_role}
+                            donorTier={msg.donor_tier}
+                            customColor={msg.nickname_color}
+                            profilePrimaryColor={msg.profile?.profile_primary_color}
+                            profileAccentColor={msg.profile?.profile_accent_color}
+                            profileEmoji={msg.profile?.profile_emoji}
+                            showBadge
+                          />
+                          <span className="text-xs">:</span>
+                          <span className="text-sm flex-1">
                             <MessageContent content={msg.content} />
-                          </div>
+                          </span>
+                          <span className="text-xs text-muted-foreground ml-auto shrink-0">
+                            {formatMessageTime(new Date(msg.created_at))}
+                          </span>
                         </div>
                       </div>
-                    ))
-                  )}
-                  <div ref={messagesEndRef} />
-                </div>
-              </ScrollArea>
+                      
+                      {/* Delete button */}
+                      {(msg.user_id === user?.id || isStaff) && (
+                        <button 
+                          onClick={() => deleteMutation.mutate(msg.id)}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity p-1"
+                        >
+                          <Trash2 className="w-3.5 h-3.5 text-destructive hover:text-destructive/80" />
+                        </button>
+                      )}
+                    </div>
+                  ))
+                )}
+                <div ref={messagesEndRef} />
+              </div>
+            </ScrollArea>
 
-              <div className="p-4 border-t border-border">
-                {user ? (
-                  <div className="flex gap-2">
+            {/* Input area like reference */}
+            <div className="border-t border-border p-4">
+              {user ? (
+                <div className="space-y-3">
+                  {/* Toolbar */}
+                  <div className="flex items-center gap-1 text-muted-foreground">
+                    <button className="p-1.5 hover:bg-secondary rounded">
+                      <Bold className="w-4 h-4" />
+                    </button>
+                    <button className="p-1.5 hover:bg-secondary rounded">
+                      <Italic className="w-4 h-4" />
+                    </button>
+                    <button className="p-1.5 hover:bg-secondary rounded">
+                      <LinkIcon className="w-4 h-4" />
+                    </button>
+                    <button className="p-1.5 hover:bg-secondary rounded">
+                      <ImageIcon className="w-4 h-4" />
+                    </button>
                     <EmojiPicker onEmojiSelect={handleEmojiSelect} />
-                    <Input
+                  </div>
+
+                  {/* Textarea and send */}
+                  <div className="flex gap-2 items-end">
+                    <Textarea
                       value={messageText}
                       onChange={e => setMessageText(e.target.value)}
                       placeholder="Напишите сообщение..."
+                      className="min-h-[60px] resize-none bg-secondary/50 border-border"
                       onKeyDown={e => {
                         if (e.key === 'Enter' && !e.shiftKey) {
                           e.preventDefault();
                           handleSend();
                         }
                       }}
-                      className="flex-1"
                     />
                     <Button 
                       onClick={handleSend} 
                       disabled={sendMutation.isPending || !messageText.trim()}
+                      className="bg-primary text-primary-foreground gap-2"
                     >
                       <Send className="w-4 h-4" />
+                      Отправить
                     </Button>
                   </div>
-                ) : (
-                  <div className="text-center py-2">
-                    <p className="text-muted-foreground text-sm mb-2">
-                      Войдите, чтобы писать в чат
-                    </p>
-                    <Button onClick={() => navigate('/auth')}>
-                      Войти
-                    </Button>
-                  </div>
-                )}
-              </div>
+                </div>
+              ) : (
+                <div className="text-center py-4">
+                  <p className="text-muted-foreground mb-3">
+                    Для доступа, напиши три сообщения на форуме.
+                  </p>
+                  <Button onClick={() => navigate('/auth')}>
+                    Войти
+                  </Button>
+                </div>
+              )}
             </div>
-          </Card>
+          </div>
+
+          {/* Forum sections navigation */}
+          <div className="mt-6 flex items-center gap-3">
+            {forumSections.map(section => (
+              <Link
+                key={section.href}
+                to={section.href}
+                className={cn(
+                  "flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors",
+                  location.pathname === section.href
+                    ? "border-primary text-primary bg-primary/10"
+                    : "border-border text-muted-foreground hover:text-foreground hover:bg-secondary"
+                )}
+              >
+                <section.icon className="w-4 h-4" />
+                {section.name}
+              </Link>
+            ))}
+          </div>
         </div>
       </Layout>
     </>

@@ -11,6 +11,8 @@ interface DownloadAccessResult {
   requiredTier: DonorTier | null;
   remainingDownloads: number | null;
   hasUnlimitedDownloads: boolean;
+  needsPurchase: boolean; // For paid projects without tier access
+  hasTierAccess: boolean; // User tier meets required tier
 }
 
 export function useDownloadAccess(
@@ -31,6 +33,8 @@ export function useDownloadAccess(
         requiredTier: null,
         remainingDownloads: null,
         hasUnlimitedDownloads: false,
+        needsPurchase: false,
+        hasTierAccess: false,
       };
 
       // Not logged in
@@ -53,34 +57,83 @@ export function useDownloadAccess(
       const userPriority = DONOR_PRIORITY[userTier];
       const requiredTier = (projectMinTier as DonorTier) || 'none';
       const requiredPriority = DONOR_PRIORITY[requiredTier];
+      
+      // Check if user tier meets required tier
+      const hasTierAccess = userPriority >= requiredPriority;
 
-      // Check tier access for paid/leak projects with min_donor_tier
+      // For PAID projects: check if user has tier access OR needs to purchase
+      if (projectPriceType === 'paid') {
+        // If user has required tier - they can download for FREE
+        if (projectMinTier && projectMinTier !== 'none' && hasTierAccess) {
+          // Check daily download limit
+          const { data: canDownloadResult } = await supabase.rpc('check_download_limit', {
+            p_user_id: user.id,
+          });
+
+          const { data: remainingResult } = await supabase.rpc('get_remaining_downloads', {
+            p_user_id: user.id,
+          });
+
+          const hasUnlimitedDownloads = userPriority >= DONOR_PRIORITY.gold;
+
+          if (!canDownloadResult && !hasUnlimitedDownloads) {
+            return {
+              canDownload: false,
+              canInteract: true,
+              reason: 'Достигнут дневной лимит скачиваний',
+              userTier,
+              requiredTier,
+              remainingDownloads: 0,
+              hasUnlimitedDownloads: false,
+              needsPurchase: false,
+              hasTierAccess: true,
+            };
+          }
+
+          return {
+            canDownload: true,
+            canInteract: true,
+            reason: null,
+            userTier,
+            requiredTier,
+            remainingDownloads: hasUnlimitedDownloads ? null : (remainingResult ?? 0),
+            hasUnlimitedDownloads,
+            needsPurchase: false,
+            hasTierAccess: true,
+          };
+        }
+
+        // User doesn't have tier access - needs to purchase
+        return {
+          canDownload: false,
+          canInteract: false, // Can't rate/comment without access
+          reason: projectMinTier && projectMinTier !== 'none'
+            ? `Требуется ${requiredTier} для бесплатного доступа или свяжитесь с продавцом`
+            : 'Платный проект — свяжитесь с продавцом',
+          userTier,
+          requiredTier,
+          remainingDownloads: null,
+          hasUnlimitedDownloads: false,
+          needsPurchase: true,
+          hasTierAccess: false,
+        };
+      }
+
+      // For LEAK/FREE projects with min_donor_tier requirement
       if (projectMinTier && projectMinTier !== 'none') {
-        if (userPriority < requiredPriority) {
+        if (!hasTierAccess) {
           return {
             canDownload: false,
-            canInteract: false, // Can't interact if no access
+            canInteract: false,
             reason: `Требуется ${requiredTier} или выше для доступа`,
             userTier,
             requiredTier,
             remainingDownloads: null,
             hasUnlimitedDownloads: false,
+            needsPurchase: false,
+            hasTierAccess: false,
           };
         }
-      }
-
-      // For paid projects, check if user has purchased
-      if (projectPriceType === 'paid') {
-        // User can see and interact, but download is through purchase flow
-        return {
-          canDownload: false, // Needs to buy
-          canInteract: true, // Can rate/comment after viewing
-          reason: 'Платный проект — свяжитесь с продавцом',
-          userTier,
-          requiredTier,
-          remainingDownloads: null,
-          hasUnlimitedDownloads: false,
-        };
       }
 
       // Check daily download limit
@@ -98,12 +151,14 @@ export function useDownloadAccess(
       if (!canDownloadResult && !hasUnlimitedDownloads) {
         return {
           canDownload: false,
-          canInteract: true, // Can still rate/comment
+          canInteract: true,
           reason: 'Достигнут дневной лимит скачиваний',
           userTier,
           requiredTier,
           remainingDownloads: 0,
           hasUnlimitedDownloads: false,
+          needsPurchase: false,
+          hasTierAccess: true,
         };
       }
 
@@ -115,6 +170,8 @@ export function useDownloadAccess(
         requiredTier,
         remainingDownloads: hasUnlimitedDownloads ? null : (remainingResult ?? 0),
         hasUnlimitedDownloads,
+        needsPurchase: false,
+        hasTierAccess: true,
       };
     },
     enabled: true,
