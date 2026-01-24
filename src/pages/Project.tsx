@@ -399,20 +399,25 @@ export default function Project() {
     mutationFn: async () => {
       if (!project?.id || !user?.id) throw new Error('Not authenticated');
       
-      const { error } = await supabase.from('purchase_requests').insert({
+      const { data, error } = await supabase.from('purchase_requests').insert({
         project_id: project.id,
         buyer_id: user.id,
         seller_id: project.author_id,
         message: purchaseMessage.trim() || null,
         referral_source: referralSource.trim() || null,
-      });
+      }).select('id').single();
       if (error) throw error;
+      return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       setShowPurchaseDialog(false);
       setPurchaseMessage('');
       setReferralSource('');
-      toast({ title: 'Заявка отправлена!', description: 'Продавец свяжется с вами' });
+      toast({ title: 'Заявка отправлена!', description: 'Переходим в чат заказа' });
+      // Navigate to order chat
+      if (data?.id) {
+        navigate(`/order/${data.id}`);
+      }
     },
     onError: (error: Error) => {
       toast({ title: 'Ошибка', description: error.message, variant: 'destructive' });
