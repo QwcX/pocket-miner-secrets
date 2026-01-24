@@ -664,14 +664,14 @@ export default function Project() {
                   )}
 
                   {/* Download or Purchase button */}
-                  {project.price_type === 'paid' ? (
+                  {project.price_type === 'paid' && !accessInfo?.hasTierAccess ? (
                     <Button 
                       className="w-full" 
                       size="lg" 
                       onClick={handlePurchase}
                     >
                       <ShoppingCart className="w-4 h-4 mr-2" />
-                      Написать продавцу
+                      Написать продавцу ({project.price} ₽)
                     </Button>
                   ) : latestVersion ? (
                     <Button 
@@ -681,7 +681,9 @@ export default function Project() {
                       disabled={!accessInfo?.canDownload}
                     >
                       <Download className="w-4 h-4 mr-2" />
-                      Скачать v{latestVersion.version_number}
+                      {accessInfo?.hasTierAccess && project.price_type === 'paid' 
+                        ? `Скачать бесплатно (${accessInfo.userTier})` 
+                        : `Скачать v${latestVersion.version_number}`}
                     </Button>
                   ) : (
                     <p className="text-sm text-muted-foreground text-center">Нет файлов</p>

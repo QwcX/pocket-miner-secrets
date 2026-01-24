@@ -7,11 +7,19 @@ import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { UserNickname } from '@/components/UserNickname';
 import { useToast } from '@/hooks/use-toast';
 import { Helmet } from 'react-helmet-async';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { 
   ShoppingCart, 
   Check, 
@@ -21,10 +29,11 @@ import {
   CheckCircle,
   XCircle,
   Package,
-  User,
   MapPin,
   Loader2,
   ExternalLink,
+  Search,
+  Calendar,
 } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -64,6 +73,8 @@ export default function SellerRequests() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState('pending');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [dateFilter, setDateFilter] = useState<'all' | 'today' | 'week' | 'month'>('all');
 
   // Check if user can access
   const { data: userRoles } = useQuery({
@@ -162,9 +173,36 @@ export default function SellerRequests() {
     return null;
   }
 
+  // Filter by tab, search, and date
   const filteredRequests = requests.filter(r => {
-    if (activeTab === 'all') return true;
-    return r.status === activeTab;
+    // Tab filter
+    if (activeTab !== 'all' && r.status !== activeTab) return false;
+    
+    // Search filter
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      if (!r.project?.title?.toLowerCase().includes(q) && 
+          !r.buyer?.username?.toLowerCase().includes(q)) {
+        return false;
+      }
+    }
+    
+    // Date filter
+    if (dateFilter !== 'all') {
+      const created = new Date(r.created_at);
+      const now = new Date();
+      if (dateFilter === 'today') {
+        if (created.toDateString() !== now.toDateString()) return false;
+      } else if (dateFilter === 'week') {
+        const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        if (created < weekAgo) return false;
+      } else if (dateFilter === 'month') {
+        const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        if (created < monthAgo) return false;
+      }
+    }
+    
+    return true;
   });
 
   const pendingCount = requests.filter(r => r.status === 'pending').length;
@@ -188,6 +226,30 @@ export default function SellerRequests() {
                 {isStaff ? 'Все заявки (режим модератора)' : 'Управление заявками на ваши проекты'}
               </p>
             </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3 mb-6">
+            <div className="relative flex-1 min-w-[200px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Поиск по проекту или покупателю..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Select value={dateFilter} onValueChange={(v: any) => setDateFilter(v)}>
+              <SelectTrigger className="w-[150px]">
+                <Calendar className="w-4 h-4 mr-2" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Все время</SelectItem>
+                <SelectItem value="today">Сегодня</SelectItem>
+                <SelectItem value="week">Неделя</SelectItem>
+                <SelectItem value="month">Месяц</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab}>
