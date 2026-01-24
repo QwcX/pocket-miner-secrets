@@ -28,6 +28,7 @@ import {
   Ticket,
   Wrench,
   TrendingUp,
+  Download,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -57,10 +58,15 @@ const navItems = [
     ],
   },
   {
+    name: 'ЧАТ',
+    icon: MessageSquare,
+    href: '/chat',
+    highlight: true,
+  },
+  {
     name: 'ФОРУМЫ',
     icon: HelpCircle,
     href: '/forum',
-    highlight: true,
   },
   {
     name: 'ЧТО НОВОГО',
@@ -103,6 +109,18 @@ export function Header({ snowflakesEnabled = true, onToggleSnowflakes }: HeaderP
       
       if (error) throw error;
       return data;
+    },
+    enabled: !!user,
+  });
+
+  // Get remaining downloads count
+  const { data: remainingDownloads } = useQuery({
+    queryKey: ['remaining-downloads', user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+      const { data, error } = await supabase.rpc('get_remaining_downloads', { p_user_id: user.id });
+      if (error) throw error;
+      return data as number;
     },
     enabled: !!user,
   });
@@ -186,6 +204,22 @@ export function Header({ snowflakesEnabled = true, onToggleSnowflakes }: HeaderP
 
         {/* Actions */}
         <div className="flex items-center gap-1 sm:gap-2">
+          {/* Download counter for logged in users */}
+          {user && remainingDownloads !== null && (
+            <div 
+              className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-secondary/50 border border-border text-xs"
+              title={remainingDownloads === -1 
+                ? 'Безлимитные скачивания' 
+                : `Осталось скачиваний сегодня: ${remainingDownloads}. Лимит сбрасывается в полночь.`
+              }
+            >
+              <Download className="w-3.5 h-3.5 text-primary" />
+              <span className="text-muted-foreground">
+                {remainingDownloads === -1 ? '∞' : remainingDownloads}
+              </span>
+            </div>
+          )}
+          
           {/* Buy Donate button - more visible */}
           <Button
             size="sm"

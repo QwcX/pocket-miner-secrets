@@ -26,6 +26,7 @@ import Forum from "./pages/Forum";
 import ForumQuestion from "./pages/ForumQuestion";
 import SellerRequests from "./pages/SellerRequests";
 import OrderChat from "./pages/OrderChat";
+import GlobalChat from "./pages/GlobalChat";
 
 const queryClient = new QueryClient();
 
@@ -59,6 +60,7 @@ const App = () => (
                 <Route path="/forum/:questionId" element={<ForumQuestion />} />
                 <Route path="/seller-requests" element={<SellerRequests />} />
                 <Route path="/order/:requestId" element={<OrderChat />} />
+                <Route path="/chat" element={<GlobalChat />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
