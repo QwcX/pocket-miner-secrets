@@ -29,7 +29,13 @@ import {
   CheckCircle,
   XCircle,
   AlertCircle,
+  ImageIcon,
+  X,
 } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+} from '@/components/ui/dialog';
 import { formatDistanceToNow, format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { DonorTier, AppRole, Profile } from '@/types/database';
@@ -40,6 +46,7 @@ interface PurchaseMessage {
   sender_id: string;
   content: string;
   created_at: string;
+  image_url?: string | null;
   sender_profile?: Profile;
   sender_role?: AppRole;
   sender_donor_tier?: DonorTier;
@@ -97,7 +104,12 @@ export default function OrderChat() {
   const { checkRateLimit } = useRateLimit();
   const queryClient = useQueryClient();
   const [messageText, setMessageText] = useState('');
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [viewImage, setViewImage] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Check if user can access this order (buyer, seller, or staff)
   const { data: userRoles } = useQuery({
@@ -222,9 +234,35 @@ export default function OrderChat() {
     enabled: !!requestId,
   });
 
+  // Handle image selection
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: 'Ошибка', description: 'Максимальный размер файла: 5MB', variant: 'destructive' });
+      return;
+    }
+
+    if (!['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(file.type)) {
+      toast({ title: 'Ошибка', description: 'Разрешены только изображения (JPG, PNG, GIF, WebP)', variant: 'destructive' });
+      return;
+    }
+
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+  };
+
+  const clearImage = () => {
+    setImageFile(null);
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
+    setImagePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   // Send message mutation
   const sendMutation = useMutation({
-    mutationFn: async (content: string) => {
+    mutationFn: async ({ content, imageUrl }: { content: string; imageUrl?: string }) => {
       if (!user || !requestId) throw new Error('Not authenticated');
       
       const allowed = await checkRateLimit({
@@ -238,17 +276,53 @@ export default function OrderChat() {
         request_id: requestId,
         sender_id: user.id,
         content: content.trim(),
+        image_url: imageUrl || null,
       });
       if (error) throw error;
     },
     onSuccess: () => {
       setMessageText('');
+      clearImage();
       queryClient.invalidateQueries({ queryKey: ['order-messages', requestId] });
     },
     onError: (error: Error) => {
       toast({ title: 'Ошибка', description: error.message, variant: 'destructive' });
     },
   });
+
+  const handleSend = async () => {
+    if (!messageText.trim() && !imageFile) return;
+    if (!user || !requestId) return;
+
+    let imageUrl: string | undefined;
+
+    if (imageFile) {
+      setUploading(true);
+      try {
+        const fileExt = imageFile.name.split('.').pop();
+        const fileName = `${user.id}/${requestId}/${Date.now()}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('chat-images')
+          .upload(fileName, imageFile);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('chat-images')
+          .getPublicUrl(fileName);
+
+        imageUrl = publicUrl;
+      } catch (err: any) {
+        toast({ title: 'Ошибка загрузки', description: err.message, variant: 'destructive' });
+        setUploading(false);
+        return;
+      }
+      setUploading(false);
+    }
+
+    sendMutation.mutate({ content: messageText || '', imageUrl });
+  };
 
   // Realtime subscription
   useEffect(() => {
@@ -468,6 +542,15 @@ export default function OrderChat() {
                         </div>
                         <div className="bg-secondary/50 rounded-lg px-3 py-2">
                           <MessageContent content={msg.content} />
+                          {/* Attached image */}
+                          {msg.image_url && (
+                            <img 
+                              src={msg.image_url} 
+                              alt="Вложение"
+                              className="mt-2 max-w-xs max-h-48 rounded cursor-pointer hover:opacity-90 transition-opacity"
+                              onClick={() => setViewImage(msg.image_url!)}
+                            />
+                          )}
                         </div>
                       </div>
                     </div>
@@ -479,7 +562,37 @@ export default function OrderChat() {
 
             {/* Input */}
             <div className="p-4 border-t border-border">
+              {/* Image preview */}
+              {imagePreview && (
+                <div className="relative inline-block mb-3">
+                  <img 
+                    src={imagePreview} 
+                    alt="Превью" 
+                    className="max-h-20 rounded border border-border"
+                  />
+                  <button 
+                    onClick={clearImage}
+                    className="absolute -top-2 -right-2 p-1 bg-destructive text-destructive-foreground rounded-full hover:bg-destructive/80"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              )}
+
               <div className="flex gap-2 items-end">
+                <button 
+                  className="p-2 hover:bg-secondary rounded text-muted-foreground"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <ImageIcon className="w-5 h-5" />
+                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/gif,image/webp"
+                  className="hidden"
+                  onChange={handleImageSelect}
+                />
                 <EmojiPicker 
                   onEmojiSelect={(emoji, isImage, imageUrl) => {
                     if (isImage && imageUrl) {
@@ -496,17 +609,17 @@ export default function OrderChat() {
                   onKeyDown={e => {
                     if (e.key === 'Enter' && !e.shiftKey) {
                       e.preventDefault();
-                      if (messageText.trim()) sendMutation.mutate(messageText);
+                      handleSend();
                     }
                   }}
                   className="flex-1 min-h-[40px] max-h-32 resize-none"
                   rows={1}
                 />
                 <Button
-                  onClick={() => sendMutation.mutate(messageText)}
-                  disabled={!messageText.trim() || sendMutation.isPending}
+                  onClick={handleSend}
+                  disabled={(!messageText.trim() && !imageFile) || sendMutation.isPending || uploading}
                 >
-                  {sendMutation.isPending ? (
+                  {sendMutation.isPending || uploading ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
                   ) : (
                     <Send className="w-4 h-4" />
@@ -516,6 +629,19 @@ export default function OrderChat() {
             </div>
           </Card>
         </div>
+
+        {/* Image viewer dialog */}
+        <Dialog open={!!viewImage} onOpenChange={() => setViewImage(null)}>
+          <DialogContent className="max-w-4xl p-2 bg-background/95">
+            {viewImage && (
+              <img 
+                src={viewImage} 
+                alt="Просмотр изображения" 
+                className="w-full h-auto max-h-[80vh] object-contain rounded"
+              />
+            )}
+          </DialogContent>
+        </Dialog>
       </Layout>
     </>
   );

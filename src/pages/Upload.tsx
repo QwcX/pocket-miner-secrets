@@ -61,6 +61,13 @@ const PRICE_TYPE_OPTIONS: { value: PriceType; label: string; description: string
   { value: 'paid', label: 'Платно', description: 'Покупка через личные сообщения', icon: DollarSign },
 ];
 
+type AccessMode = 'tier_or_purchase' | 'purchase_only';
+
+const ACCESS_MODE_OPTIONS: { value: AccessMode; label: string; description: string }[] = [
+  { value: 'tier_or_purchase', label: 'Донат или покупка', description: 'Донатеры с нужным уровнем скачивают бесплатно' },
+  { value: 'purchase_only', label: 'Только покупка', description: 'Все должны купить, донат не даёт доступ' },
+];
+
 const DONOR_TIER_OPTIONS: { value: DonorTier; label: string }[] = [
   { value: 'none', label: 'Все пользователи' },
   { value: 'iron', label: 'Iron и выше' },
@@ -87,6 +94,7 @@ export default function Upload() {
     download_url: '',
   });
   const [priceType, setPriceType] = useState<PriceType>('free');
+  const [accessMode, setAccessMode] = useState<AccessMode>('tier_or_purchase');
   const [minDonorTier, setMinDonorTier] = useState<DonorTier>('none');
   const [price, setPrice] = useState<string>('');
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -191,6 +199,7 @@ export default function Upload() {
           download_url: formData.download_url,
           is_approved: false, // Goes to moderation
           price_type: priceType,
+          access_mode: priceType === 'paid' ? accessMode : 'tier_or_purchase',
           min_donor_tier: minDonorTier === 'none' ? null : minDonorTier,
           price: priceType === 'paid' && price ? parseFloat(price) : null,
           is_premium: priceType === 'paid',
@@ -341,21 +350,50 @@ export default function Upload() {
 
                 {/* Price for paid content */}
                 {priceType === 'paid' && (
-                  <div className="space-y-2">
-                    <Label htmlFor="price">Цена (₽)</Label>
-                    <Input
-                      id="price"
-                      type="number"
-                      placeholder="100"
-                      value={price}
-                      onChange={(e) => setPrice(e.target.value)}
-                      min="0"
-                      step="1"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Покупатели свяжутся с вами через личные сообщения
-                    </p>
-                  </div>
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="price">Цена (₽)</Label>
+                      <Input
+                        id="price"
+                        type="number"
+                        placeholder="100"
+                        value={price}
+                        onChange={(e) => setPrice(e.target.value)}
+                        min="0"
+                        step="1"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Покупатели свяжутся с вами через личные сообщения
+                      </p>
+                    </div>
+
+                    {/* Access Mode for paid */}
+                    <div className="space-y-3">
+                      <Label>Режим доступа</Label>
+                      <RadioGroup 
+                        value={accessMode} 
+                        onValueChange={(v) => setAccessMode(v as AccessMode)}
+                        className="grid grid-cols-1 sm:grid-cols-2 gap-3"
+                      >
+                        {ACCESS_MODE_OPTIONS.map((option) => (
+                          <label
+                            key={option.value}
+                            className={`flex items-start gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                              accessMode === option.value 
+                                ? 'border-primary bg-primary/10' 
+                                : 'border-border hover:border-muted-foreground'
+                            }`}
+                          >
+                            <RadioGroupItem value={option.value} className="mt-0.5" />
+                            <div className="flex-1 min-w-0">
+                              <span className="font-medium text-sm">{option.label}</span>
+                              <p className="text-xs text-muted-foreground mt-0.5">{option.description}</p>
+                            </div>
+                          </label>
+                        ))}
+                      </RadioGroup>
+                    </div>
+                  </>
                 )}
 
                 {/* Min Donor Tier - access restriction */}
