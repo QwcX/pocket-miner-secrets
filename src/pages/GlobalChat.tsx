@@ -25,16 +25,23 @@ import {
   Smile,
   Settings,
   MessagesSquare,
+  X,
+  ZoomIn,
 } from 'lucide-react';
 import { format, isToday, isYesterday } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { DonorTier, AppRole, Profile } from '@/types/database';
+import {
+  Dialog,
+  DialogContent,
+} from '@/components/ui/dialog';
 
 interface ChatMessage {
   id: string;
   user_id: string;
   content: string;
   created_at: string;
+  image_url?: string | null;
   profile?: Profile;
   user_role?: AppRole;
   donor_tier?: DonorTier;
@@ -103,7 +110,12 @@ export default function GlobalChat() {
   const { checkRateLimit } = useRateLimit();
   const queryClient = useQueryClient();
   const [messageText, setMessageText] = useState('');
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [viewImage, setViewImage] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Check user roles
   const { data: userRoles } = useQuery({
@@ -167,9 +179,37 @@ export default function GlobalChat() {
     refetchInterval: 5000,
   });
 
+  // Handle image selection
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Check file size (5MB limit)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: 'Ошибка', description: 'Максимальный размер файла: 5MB', variant: 'destructive' });
+      return;
+    }
+
+    // Check file type
+    if (!['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(file.type)) {
+      toast({ title: 'Ошибка', description: 'Разрешены только изображения (JPG, PNG, GIF, WebP)', variant: 'destructive' });
+      return;
+    }
+
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+  };
+
+  const clearImage = () => {
+    setImageFile(null);
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
+    setImagePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   // Send message mutation
   const sendMutation = useMutation({
-    mutationFn: async (content: string) => {
+    mutationFn: async ({ content, imageUrl }: { content: string; imageUrl?: string }) => {
       if (!user) throw new Error('Not authenticated');
       
       const allowed = await checkRateLimit({
@@ -182,11 +222,13 @@ export default function GlobalChat() {
       const { error } = await supabase.from('public_chat_messages').insert({
         user_id: user.id,
         content: content.trim(),
+        image_url: imageUrl || null,
       });
       if (error) throw error;
     },
     onSuccess: () => {
       setMessageText('');
+      clearImage();
       queryClient.invalidateQueries({ queryKey: ['global-chat-messages'] });
     },
     onError: (error: Error) => {
@@ -238,13 +280,42 @@ export default function GlobalChat() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleSend = () => {
-    if (!messageText.trim()) return;
+  const handleSend = async () => {
+    if (!messageText.trim() && !imageFile) return;
     if (!user) {
       navigate('/auth');
       return;
     }
-    sendMutation.mutate(messageText);
+
+    let imageUrl: string | undefined;
+
+    // Upload image if present
+    if (imageFile) {
+      setUploading(true);
+      try {
+        const fileExt = imageFile.name.split('.').pop();
+        const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('chat-images')
+          .upload(fileName, imageFile);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('chat-images')
+          .getPublicUrl(fileName);
+
+        imageUrl = publicUrl;
+      } catch (err: any) {
+        toast({ title: 'Ошибка загрузки', description: err.message, variant: 'destructive' });
+        setUploading(false);
+        return;
+      }
+      setUploading(false);
+    }
+
+    sendMutation.mutate({ content: messageText || '', imageUrl });
   };
 
   const handleEmojiSelect = (emoji: string, isImage?: boolean, imageUrl?: string) => {
@@ -323,6 +394,17 @@ export default function GlobalChat() {
                             {formatMessageTime(new Date(msg.created_at))}
                           </span>
                         </div>
+                        {/* Attached image */}
+                        {msg.image_url && (
+                          <div className="mt-2">
+                            <img 
+                              src={msg.image_url} 
+                              alt="Вложение"
+                              className="max-w-xs max-h-48 rounded-lg cursor-pointer hover:opacity-90 transition-opacity border border-border"
+                              onClick={() => setViewImage(msg.image_url!)}
+                            />
+                          </div>
+                        )}
                       </div>
                       
                       {/* Delete button */}
@@ -345,6 +427,23 @@ export default function GlobalChat() {
             <div className="border-t border-border p-4">
               {user ? (
                 <div className="space-y-3">
+                  {/* Image preview */}
+                  {imagePreview && (
+                    <div className="relative inline-block">
+                      <img 
+                        src={imagePreview} 
+                        alt="Превью" 
+                        className="max-h-24 rounded-lg border border-border"
+                      />
+                      <button 
+                        onClick={clearImage}
+                        className="absolute -top-2 -right-2 p-1 bg-destructive text-destructive-foreground rounded-full hover:bg-destructive/80"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  )}
+
                   {/* Toolbar */}
                   <div className="flex items-center gap-1 text-muted-foreground">
                     <button className="p-1.5 hover:bg-secondary rounded">
@@ -356,9 +455,19 @@ export default function GlobalChat() {
                     <button className="p-1.5 hover:bg-secondary rounded">
                       <LinkIcon className="w-4 h-4" />
                     </button>
-                    <button className="p-1.5 hover:bg-secondary rounded">
+                    <button 
+                      className="p-1.5 hover:bg-secondary rounded"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
                       <ImageIcon className="w-4 h-4" />
                     </button>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/gif,image/webp"
+                      className="hidden"
+                      onChange={handleImageSelect}
+                    />
                     <EmojiPicker onEmojiSelect={handleEmojiSelect} />
                   </div>
 
@@ -378,10 +487,14 @@ export default function GlobalChat() {
                     />
                     <Button 
                       onClick={handleSend} 
-                      disabled={sendMutation.isPending || !messageText.trim()}
+                      disabled={sendMutation.isPending || uploading || (!messageText.trim() && !imageFile)}
                       className="bg-primary text-primary-foreground gap-2"
                     >
-                      <Send className="w-4 h-4" />
+                      {uploading ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Send className="w-4 h-4" />
+                      )}
                       Отправить
                     </Button>
                   </div>
@@ -418,6 +531,19 @@ export default function GlobalChat() {
             ))}
           </div>
         </div>
+
+        {/* Image viewer dialog */}
+        <Dialog open={!!viewImage} onOpenChange={() => setViewImage(null)}>
+          <DialogContent className="max-w-4xl p-2 bg-background/95">
+            {viewImage && (
+              <img 
+                src={viewImage} 
+                alt="Просмотр изображения" 
+                className="w-full h-auto max-h-[80vh] object-contain rounded"
+              />
+            )}
+          </DialogContent>
+        </Dialog>
       </Layout>
     </>
   );

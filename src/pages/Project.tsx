@@ -78,10 +78,11 @@ export default function Project() {
 
   const { data: project, isLoading } = useProject(slug || '');
   
-  // Get download access info
+  // Get download access info - now includes access_mode
   const { data: accessInfo } = useDownloadAccess(
     project?.price_type,
-    project?.min_donor_tier
+    project?.min_donor_tier,
+    (project as any)?.access_mode // access_mode from project
   );
 
   // Check if current user can moderate
@@ -664,7 +665,7 @@ export default function Project() {
                   )}
 
                   {/* Download or Purchase button */}
-                  {project.price_type === 'paid' && !accessInfo?.hasTierAccess ? (
+                  {project.price_type === 'paid' && accessInfo?.needsPurchase ? (
                     <Button 
                       className="w-full" 
                       size="lg" 
@@ -681,7 +682,7 @@ export default function Project() {
                       disabled={!accessInfo?.canDownload}
                     >
                       <Download className="w-4 h-4 mr-2" />
-                      {accessInfo?.hasTierAccess && project.price_type === 'paid' 
+                      {accessInfo?.hasTierAccess && project.price_type === 'paid' && accessInfo?.accessMode === 'tier_or_purchase'
                         ? `Скачать бесплатно (${accessInfo.userTier})` 
                         : `Скачать v${latestVersion.version_number}`}
                     </Button>

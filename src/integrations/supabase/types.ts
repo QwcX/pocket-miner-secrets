@@ -538,6 +538,7 @@ export type Database = {
       }
       projects: {
         Row: {
+          access_mode: string
           author_id: string
           content_type: Database["public"]["Enums"]["content_type"]
           created_at: string | null
@@ -559,6 +560,7 @@ export type Database = {
           views_count: number | null
         }
         Insert: {
+          access_mode?: string
           author_id: string
           content_type: Database["public"]["Enums"]["content_type"]
           created_at?: string | null
@@ -580,6 +582,7 @@ export type Database = {
           views_count?: number | null
         }
         Update: {
+          access_mode?: string
           author_id?: string
           content_type?: Database["public"]["Enums"]["content_type"]
           created_at?: string | null
@@ -607,18 +610,21 @@ export type Database = {
           content: string
           created_at: string
           id: string
+          image_url: string | null
           user_id: string
         }
         Insert: {
           content: string
           created_at?: string
           id?: string
+          image_url?: string | null
           user_id: string
         }
         Update: {
           content?: string
           created_at?: string
           id?: string
+          image_url?: string | null
           user_id?: string
         }
         Relationships: []
@@ -628,6 +634,7 @@ export type Database = {
           content: string
           created_at: string
           id: string
+          image_url: string | null
           request_id: string
           sender_id: string
         }
@@ -635,6 +642,7 @@ export type Database = {
           content: string
           created_at?: string
           id?: string
+          image_url?: string | null
           request_id: string
           sender_id: string
         }
@@ -642,6 +650,7 @@ export type Database = {
           content?: string
           created_at?: string
           id?: string
+          image_url?: string | null
           request_id?: string
           sender_id?: string
         }

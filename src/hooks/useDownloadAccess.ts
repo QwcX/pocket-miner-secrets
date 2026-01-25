@@ -3,6 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth';
 import { DonorTier, DONOR_PRIORITY } from '@/types/database';
 
+export type AccessMode = 'tier_or_purchase' | 'purchase_only';
+
 interface DownloadAccessResult {
   canDownload: boolean;
   canInteract: boolean; // Rate, comment, favorite
@@ -13,17 +15,21 @@ interface DownloadAccessResult {
   hasUnlimitedDownloads: boolean;
   needsPurchase: boolean; // For paid projects without tier access
   hasTierAccess: boolean; // User tier meets required tier
+  accessMode: AccessMode;
 }
 
 export function useDownloadAccess(
   projectPriceType: string | undefined,
-  projectMinTier: string | null | undefined
+  projectMinTier: string | null | undefined,
+  projectAccessMode: string | undefined = 'tier_or_purchase'
 ) {
   const { user } = useAuth();
 
   return useQuery<DownloadAccessResult>({
-    queryKey: ['download-access', user?.id, projectPriceType, projectMinTier],
+    queryKey: ['download-access', user?.id, projectPriceType, projectMinTier, projectAccessMode],
     queryFn: async () => {
+      const accessMode = (projectAccessMode as AccessMode) || 'tier_or_purchase';
+      
       // Default: no access
       const noAccess: DownloadAccessResult = {
         canDownload: false,
@@ -35,6 +41,7 @@ export function useDownloadAccess(
         hasUnlimitedDownloads: false,
         needsPurchase: false,
         hasTierAccess: false,
+        accessMode,
       };
 
       // Not logged in
@@ -61,11 +68,27 @@ export function useDownloadAccess(
       // Check if user tier meets required tier
       const hasTierAccess = userPriority >= requiredPriority;
 
-      // For PAID projects: check if user has tier access OR needs to purchase
+      // For PAID projects
       if (projectPriceType === 'paid') {
-        // If user has required tier - they can download for FREE
+        // PURCHASE_ONLY mode: donor tier doesn't help, must always purchase
+        if (accessMode === 'purchase_only') {
+          return {
+            canDownload: false,
+            canInteract: false,
+            reason: 'Платный проект — свяжитесь с продавцом для покупки',
+            userTier,
+            requiredTier,
+            remainingDownloads: null,
+            hasUnlimitedDownloads: false,
+            needsPurchase: true,
+            hasTierAccess: false, // In purchase_only mode, tier never gives access
+            accessMode,
+          };
+        }
+
+        // TIER_OR_PURCHASE mode: donor tier can grant free access
         if (projectMinTier && projectMinTier !== 'none' && hasTierAccess) {
-          // Check daily download limit
+          // User has required tier - they can download for FREE
           const { data: canDownloadResult } = await supabase.rpc('check_download_limit', {
             p_user_id: user.id,
           });
@@ -87,6 +110,7 @@ export function useDownloadAccess(
               hasUnlimitedDownloads: false,
               needsPurchase: false,
               hasTierAccess: true,
+              accessMode,
             };
           }
 
@@ -100,6 +124,7 @@ export function useDownloadAccess(
             hasUnlimitedDownloads,
             needsPurchase: false,
             hasTierAccess: true,
+            accessMode,
           };
         }
 
@@ -116,6 +141,7 @@ export function useDownloadAccess(
           hasUnlimitedDownloads: false,
           needsPurchase: true,
           hasTierAccess: false,
+          accessMode,
         };
       }
 
@@ -132,6 +158,7 @@ export function useDownloadAccess(
             hasUnlimitedDownloads: false,
             needsPurchase: false,
             hasTierAccess: false,
+            accessMode,
           };
         }
       }
@@ -159,6 +186,7 @@ export function useDownloadAccess(
           hasUnlimitedDownloads: false,
           needsPurchase: false,
           hasTierAccess: true,
+          accessMode,
         };
       }
 
@@ -172,6 +200,7 @@ export function useDownloadAccess(
         hasUnlimitedDownloads,
         needsPurchase: false,
         hasTierAccess: true,
+        accessMode,
       };
     },
     enabled: true,
