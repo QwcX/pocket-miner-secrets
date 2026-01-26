@@ -28,6 +28,10 @@ import SellerRequests from "./pages/SellerRequests";
 import OrderChat from "./pages/OrderChat";
 import GlobalChat from "./pages/GlobalChat";
 import ChatModeration from "./pages/ChatModeration";
+import About from "./pages/About";
+import FAQ from "./pages/FAQ";
+import Rules from "./pages/Rules";
+import Contact from "./pages/Contact";
 
 const queryClient = new QueryClient();
 
@@ -63,6 +67,10 @@ const App = () => (
                 <Route path="/order/:requestId" element={<OrderChat />} />
                 <Route path="/chat" element={<GlobalChat />} />
                 <Route path="/chat/moderation" element={<ChatModeration />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/faq" element={<FAQ />} />
+                <Route path="/rules" element={<Rules />} />
+                <Route path="/contact" element={<Contact />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>

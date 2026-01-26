@@ -145,22 +145,63 @@ export function useDownloadAccess(
         };
       }
 
-      // For LEAK/FREE projects with min_donor_tier requirement
-      if (projectMinTier && projectMinTier !== 'none') {
-        if (!hasTierAccess) {
+      // For FREE/LEAK projects
+      // If no min_donor_tier or tier is 'none', everyone can access
+      if (!projectMinTier || projectMinTier === 'none') {
+        // Check daily download limit only
+        const { data: canDownloadResult } = await supabase.rpc('check_download_limit', {
+          p_user_id: user.id,
+        });
+
+        const { data: remainingResult } = await supabase.rpc('get_remaining_downloads', {
+          p_user_id: user.id,
+        });
+
+        const hasUnlimitedDownloads = userPriority >= DONOR_PRIORITY.gold;
+
+        if (!canDownloadResult && !hasUnlimitedDownloads) {
           return {
             canDownload: false,
-            canInteract: false,
-            reason: `Требуется ${requiredTier} или выше для доступа`,
+            canInteract: true, // Can still interact even at download limit
+            reason: 'Достигнут дневной лимит скачиваний',
             userTier,
-            requiredTier,
-            remainingDownloads: null,
+            requiredTier: null,
+            remainingDownloads: 0,
             hasUnlimitedDownloads: false,
             needsPurchase: false,
-            hasTierAccess: false,
+            hasTierAccess: true,
             accessMode,
           };
         }
+
+        return {
+          canDownload: true,
+          canInteract: true,
+          reason: null,
+          userTier,
+          requiredTier: null,
+          remainingDownloads: hasUnlimitedDownloads ? null : (remainingResult ?? 0),
+          hasUnlimitedDownloads,
+          needsPurchase: false,
+          hasTierAccess: true,
+          accessMode,
+        };
+      }
+
+      // For projects WITH min_donor_tier requirement (tier-gated free content)
+      if (!hasTierAccess) {
+        return {
+          canDownload: false,
+          canInteract: false,
+          reason: `Требуется ${requiredTier} или выше для доступа`,
+          userTier,
+          requiredTier,
+          remainingDownloads: null,
+          hasUnlimitedDownloads: false,
+          needsPurchase: false,
+          hasTierAccess: false,
+          accessMode,
+        };
       }
 
       // Check daily download limit
