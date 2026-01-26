@@ -65,19 +65,28 @@ export function UserNickname({
   }
 
   const isStaff =
-    role === 'admin' || role === 'moderator' || role === 'curator' || role === 'developer';
+    role === 'admin' || role === 'moderator' || role === 'curator' || role === 'developer' || role === 'owner';
 
-  // Only apply profile palette preview when it's a regular user (no staff/donor override)
+  // Check if we have a shimmer class (staff roles or donors)
+  const hasShimmerClass = isStaff || donorTier !== 'none';
+
+  // Only apply custom color styles when donor has custom nickname color set
+  // Staff roles and donors with no custom color use the CSS shimmer classes
+  const shouldUseCustomColor = customColor && !isStaff;
+
+  const donorHsl = shouldUseCustomColor ? hexToHslChannels(customColor) : null;
+
+  // For regular users with profile colors (no staff/donor)
   const shouldUseProfilePalette =
     !customColor && !isStaff && donorTier === 'none' && (!!profilePrimaryColor || !!profileAccentColor);
 
-  const donorHsl = hexToHslChannels(customColor);
   const primaryHsl = shouldUseProfilePalette ? hexToHslChannels(profilePrimaryColor) : null;
   const accentHsl = shouldUseProfilePalette ? hexToHslChannels(profileAccentColor) : null;
 
   const glowHsl = donorHsl || accentHsl || primaryHsl;
 
-  const style = glowHsl
+  // Only apply inline styles for custom colors (not for default shimmer classes)
+  const style = (glowHsl && !hasShimmerClass)
     ? {
         color: `hsl(${donorHsl || primaryHsl || glowHsl})`,
         textShadow: `0 0 10px hsl(${glowHsl} / 0.9), 0 0 20px hsl(${glowHsl} / 0.35)`,
