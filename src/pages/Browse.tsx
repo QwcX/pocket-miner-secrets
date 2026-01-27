@@ -1,180 +1,199 @@
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Layout } from '@/components/layout/Layout';
 import { ProjectGrid } from '@/components/projects/ProjectGrid';
+import { BrowseFilters } from '@/components/projects/BrowseFilters';
 import { useProjects, useProjectRatings } from '@/hooks/useProjects';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { 
-  Search, 
-  Filter,
-  SortAsc,
-  Puzzle,
-  Blocks,
-  Map,
-  Palette,
-  Package,
-  Settings,
-  X,
-} from 'lucide-react';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { ContentType, CONTENT_TYPE_LABELS } from '@/types/database';
-import { cn } from '@/lib/utils';
 import { Helmet } from 'react-helmet-async';
-
-const contentTypes: { value: ContentType; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
-  { value: 'build', label: 'Сборки', icon: Package },
-  { value: 'plugin', label: 'Плагины', icon: Puzzle },
-  { value: 'mod', label: 'Моды', icon: Blocks },
-  { value: 'map', label: 'Карты', icon: Map },
-  { value: 'resourcepack', label: 'Ресурспаки', icon: Palette },
-  { value: 'config', label: 'Конфиги', icon: Settings },
-];
 
 export default function Browse() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
 
-  const type = searchParams.get('type') as ContentType | null;
-  const search = searchParams.get('search') || undefined;
+  // Parse URL params into filter state
+  const filters = useMemo(() => ({
+    type: searchParams.get('type') as ContentType | null,
+    search: searchParams.get('search') || '',
+    sort: searchParams.get('sort') || 'newest',
+    price: searchParams.get('price') || 'all',
+    date: searchParams.get('date') || 'all',
+    rating: searchParams.get('rating') || 'all',
+    minecraftVersions: searchParams.get('mc')?.split(',').filter(Boolean) || [],
+  }), [searchParams]);
 
-  const { data: projects = [], isLoading } = useProjects({ 
-    type: type || undefined, 
-    search,
-    limit: 100,
+  // Local search state for input
+  const [localSearch, setLocalSearch] = useState(filters.search);
+
+  // Sync local search with URL
+  useEffect(() => {
+    setLocalSearch(filters.search);
+  }, [filters.search]);
+
+  const { data: allProjects = [], isLoading } = useProjects({ 
+    type: filters.type || undefined, 
+    search: filters.search || undefined,
+    limit: 200,
   });
 
-  const projectIds = projects.map(p => p.id);
+  // Apply client-side filters
+  const filteredProjects = useMemo(() => {
+    let projects = [...allProjects];
+
+    // Price filter
+    if (filters.price !== 'all') {
+      projects = projects.filter(p => {
+        if (filters.price === 'free') return p.price_type === 'free';
+        if (filters.price === 'paid') return p.price_type === 'paid';
+        if (filters.price === 'leak') return p.price_type === 'leak';
+        return true;
+      });
+    }
+
+    // Date filter
+    if (filters.date !== 'all') {
+      const now = new Date();
+      const cutoff = new Date();
+      if (filters.date === 'day') cutoff.setDate(now.getDate() - 1);
+      else if (filters.date === 'week') cutoff.setDate(now.getDate() - 7);
+      else if (filters.date === 'month') cutoff.setMonth(now.getMonth() - 1);
+      else if (filters.date === 'year') cutoff.setFullYear(now.getFullYear() - 1);
+      
+      projects = projects.filter(p => new Date(p.created_at) >= cutoff);
+    }
+
+    // Minecraft versions filter
+    if (filters.minecraftVersions.length > 0) {
+      projects = projects.filter(p => 
+        p.minecraft_versions?.some(v => filters.minecraftVersions.includes(v))
+      );
+    }
+
+    return projects;
+  }, [allProjects, filters.price, filters.date, filters.minecraftVersions]);
+
+  // Get project IDs for rating fetch
+  const projectIds = filteredProjects.map(p => p.id);
   const { data: ratings = {} } = useProjectRatings(projectIds);
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      searchParams.set('search', searchQuery.trim());
-    } else {
-      searchParams.delete('search');
+  // Apply rating filter and sort
+  const sortedProjects = useMemo(() => {
+    let projects = [...filteredProjects];
+
+    // Rating filter
+    if (filters.rating !== 'all') {
+      const minRating = parseInt(filters.rating);
+      projects = projects.filter(p => (ratings[p.id] || 0) >= minRating);
     }
-    setSearchParams(searchParams);
+
+    // Sort
+    switch (filters.sort) {
+      case 'popular':
+        projects.sort((a, b) => (b.downloads_count + b.views_count) - (a.downloads_count + a.views_count));
+        break;
+      case 'downloads':
+        projects.sort((a, b) => b.downloads_count - a.downloads_count);
+        break;
+      case 'rating':
+        projects.sort((a, b) => (ratings[b.id] || 0) - (ratings[a.id] || 0));
+        break;
+      case 'newest':
+      default:
+        projects.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        break;
+    }
+
+    return projects;
+  }, [filteredProjects, filters.sort, filters.rating, ratings]);
+
+  // Update URL when filters change
+  const handleFiltersChange = (newFilters: typeof filters) => {
+    const params = new URLSearchParams();
+    
+    if (newFilters.type) params.set('type', newFilters.type);
+    if (newFilters.search) params.set('search', newFilters.search);
+    if (newFilters.sort !== 'newest') params.set('sort', newFilters.sort);
+    if (newFilters.price !== 'all') params.set('price', newFilters.price);
+    if (newFilters.date !== 'all') params.set('date', newFilters.date);
+    if (newFilters.rating !== 'all') params.set('rating', newFilters.rating);
+    if (newFilters.minecraftVersions.length > 0) {
+      params.set('mc', newFilters.minecraftVersions.join(','));
+    }
+
+    setSearchParams(params);
+    
+    // Save to localStorage
+    localStorage.setItem('browse-filters', JSON.stringify(newFilters));
   };
 
-  const handleTypeFilter = (value: ContentType | 'all') => {
-    if (value === 'all') {
-      searchParams.delete('type');
-    } else {
-      searchParams.set('type', value);
-    }
-    setSearchParams(searchParams);
+  const handleSearch = (query: string) => {
+    handleFiltersChange({ ...filters, search: query });
   };
 
-  const clearFilters = () => {
+  const handleClear = () => {
     setSearchParams({});
-    setSearchQuery('');
+    setLocalSearch('');
+    localStorage.removeItem('browse-filters');
   };
 
-  const hasFilters = type || search;
+  // Restore filters from localStorage on mount
+  useEffect(() => {
+    const savedFilters = localStorage.getItem('browse-filters');
+    if (savedFilters && !searchParams.toString()) {
+      try {
+        const parsed = JSON.parse(savedFilters);
+        handleFiltersChange(parsed);
+      } catch {
+        // Ignore parse errors
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <>
       <Helmet>
         <title>
-          {type ? CONTENT_TYPE_LABELS[type] : 'Каталог'} | TestLeak
+          {filters.type ? CONTENT_TYPE_LABELS[filters.type] : 'Каталог'} | TestLeak
         </title>
         <meta 
           name="description" 
-          content={`Скачать ${type ? CONTENT_TYPE_LABELS[type].toLowerCase() : 'сборки, плагины, моды, карты и ресурспаки'} для Minecraft бесплатно.`}
+          content={`Скачать ${filters.type ? CONTENT_TYPE_LABELS[filters.type].toLowerCase() : 'сборки, плагины, моды, карты и ресурспаки'} для Minecraft бесплатно.`}
         />
       </Helmet>
 
       <Layout>
         <div className="container py-4 sm:py-6 md:py-8 px-3 sm:px-4">
           {/* Header */}
-          <div className="mb-4 sm:mb-6 md:mb-8">
-            <h1 className="text-xl sm:text-2xl font-semibold text-foreground mb-1 sm:mb-2">
-              {type ? CONTENT_TYPE_LABELS[type] : 'Каталог'}
+          <div className="mb-4 sm:mb-6">
+            <h1 className="text-xl sm:text-2xl font-semibold text-foreground mb-1">
+              {filters.type ? CONTENT_TYPE_LABELS[filters.type] : 'Каталог'}
             </h1>
-            <p className="text-sm sm:text-base text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               Найдите лучший контент для Minecraft
             </p>
           </div>
 
           {/* Filters */}
-          <div className="flex flex-col gap-3 sm:gap-4 mb-4 sm:mb-6 md:mb-8">
-            {/* Search */}
-            <form onSubmit={handleSearch} className="w-full lg:max-w-xl">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  type="search"
-                  placeholder="Поиск по названию или описанию..."
-                  className="pl-10 bg-card border-border h-9 sm:h-10"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-            </form>
-
-            {/* Type filter - horizontal scroll on mobile */}
-            <div className="flex gap-2 overflow-x-auto pb-2 -mx-3 px-3 sm:mx-0 sm:px-0 sm:flex-wrap scrollbar-hide">
-              <Button
-                variant={!type ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => handleTypeFilter('all')}
-                className={cn('shrink-0 text-xs sm:text-sm', !type && 'bg-primary')}
-              >
-                Все
-              </Button>
-              {contentTypes.map((ct) => (
-                <Button
-                  key={ct.value}
-                  variant={type === ct.value ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => handleTypeFilter(ct.value)}
-                  className={cn('shrink-0 text-xs sm:text-sm', type === ct.value && 'bg-primary')}
-                >
-                  <ct.icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1" />
-                  <span className="hidden xs:inline">{ct.label}</span>
-                </Button>
-              ))}
-            </div>
+          <div className="mb-6">
+            <BrowseFilters
+              filters={{ ...filters, search: localSearch }}
+              onFiltersChange={(f) => {
+                setLocalSearch(f.search);
+                handleFiltersChange(f);
+              }}
+              onSearch={handleSearch}
+              onClear={handleClear}
+            />
           </div>
 
-          {/* Active filters */}
-          {hasFilters && (
-            <div className="flex flex-wrap items-center gap-2 mb-4 sm:mb-6">
-              <span className="text-xs sm:text-sm text-muted-foreground">Фильтры:</span>
-              {search && (
-                <Badge variant="secondary" className="gap-1 text-xs">
-                  Поиск: {search}
-                  <button onClick={() => {
-                    searchParams.delete('search');
-                    setSearchParams(searchParams);
-                    setSearchQuery('');
-                  }}>
-                    <X className="w-3 h-3" />
-                  </button>
-                </Badge>
-              )}
-              <Button variant="ghost" size="sm" onClick={clearFilters} className="text-xs sm:text-sm h-7 sm:h-8">
-                Сбросить
-              </Button>
-            </div>
-          )}
-
           {/* Results count */}
-          <p className="text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6">
-            Найдено: {projects.length} {projects.length === 1 ? 'проект' : 'проектов'}
+          <p className="text-sm text-muted-foreground mb-4">
+            Найдено: {sortedProjects.length} {sortedProjects.length === 1 ? 'проект' : 'проектов'}
           </p>
 
           {/* Grid */}
           <ProjectGrid 
-            projects={projects} 
+            projects={sortedProjects} 
             loading={isLoading}
             ratings={ratings}
           />

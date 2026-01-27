@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Download, Star, Eye, Crown } from 'lucide-react';
+import { Download, Star, Eye, Crown, Clock } from 'lucide-react';
 import { Project, CONTENT_TYPE_LABELS, CONTENT_TYPE_COLORS, DonorTier, AppRole } from '@/types/database';
 import { cn } from '@/lib/utils';
 import { UserNickname } from '@/components/UserNickname';
@@ -45,6 +45,16 @@ export function ProjectCard({ project, rating = 0 }: ProjectCardProps) {
     if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
     if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
     return num.toString();
+  };
+
+  const formatDate = (date: string) => {
+    const d = new Date(date);
+    const now = new Date();
+    const diffDays = Math.floor((now.getTime() - d.getTime()) / 86400000);
+    if (diffDays === 0) return 'сегодня';
+    if (diffDays === 1) return 'вчера';
+    if (diffDays < 7) return `${diffDays} дн.`;
+    return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
   };
 
   return (
@@ -124,7 +134,7 @@ export function ProjectCard({ project, rating = 0 }: ProjectCardProps) {
         </p>
 
         {/* Stats */}
-        <div className="flex items-center gap-2 sm:gap-4 text-[10px] sm:text-xs text-muted-foreground">
+        <div className="flex items-center gap-2 sm:gap-3 text-[10px] sm:text-xs text-muted-foreground flex-wrap">
           <div className="flex items-center gap-0.5 sm:gap-1">
             <Download className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
             {formatNumber(project.downloads_count)}
@@ -139,6 +149,10 @@ export function ProjectCard({ project, rating = 0 }: ProjectCardProps) {
               {rating.toFixed(1)}
             </div>
           )}
+          <div className="flex items-center gap-0.5 sm:gap-1 text-muted-foreground/70">
+            <Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+            {formatDate(project.created_at)}
+          </div>
         </div>
 
         {/* Minecraft versions */}
