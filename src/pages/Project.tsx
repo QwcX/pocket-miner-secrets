@@ -16,15 +16,16 @@ import { useToast } from '@/hooks/use-toast';
 import { UserNickname } from '@/components/UserNickname';
 import { YouTubeEmbed, findYouTubeLinks } from '@/components/YouTubeEmbed';
 import { DonorBadge } from '@/components/DonorBadge';
-import { useRateLimit } from '@/hooks/useRateLimit';
 import { useDownloadAccess } from '@/hooks/useDownloadAccess';
 import { ReportDialog } from '@/components/ReportDialog';
+import { CommentSection } from '@/components/comments/CommentSection';
+import { VersionTimeline } from '@/components/projects/VersionTimeline';
 import { 
   Download, Star, Eye, Calendar, User, Heart, HeartOff, Crown,
-  MessageSquare, History, ArrowLeft, Send, Trash2, LogIn, Flag,
-  Lock, ShoppingCart, AlertTriangle,
+  MessageSquare, History, ArrowLeft, Trash2, LogIn, Flag,
+  Lock, ShoppingCart,
 } from 'lucide-react';
-import { CONTENT_TYPE_LABELS, CONTENT_TYPE_COLORS, ProjectVersion, Comment, Profile, DonorTier, AppRole, DONOR_TIER_LABELS } from '@/types/database';
+import { CONTENT_TYPE_LABELS, CONTENT_TYPE_COLORS, ProjectVersion, DonorTier, AppRole, DONOR_TIER_LABELS } from '@/types/database';
 import { cn } from '@/lib/utils';
 import { Helmet } from 'react-helmet-async';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -55,20 +56,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-interface ExtendedComment extends Comment {
-  profiles: Profile | null;
-  user_role?: AppRole;
-  donor_tier?: DonorTier;
-  nickname_color?: string | null;
-}
-
 export default function Project() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { checkRateLimit } = useRateLimit();
 
   const [showAuthDialog, setShowAuthDialog] = useState(false);
   const [authAction, setAuthAction] = useState('');
@@ -187,48 +180,6 @@ export default function Project() {
     enabled: !!project?.id && !!user?.id,
   });
 
-  const { data: comments = [] } = useQuery({
-    queryKey: ['comments', project?.id],
-    queryFn: async () => {
-      if (!project?.id) return [];
-      const { data, error } = await supabase
-        .from('comments')
-        .select('*')
-        .eq('project_id', project.id)
-        .is('parent_id', null)
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      
-      const userIds = [...new Set((data || []).map(c => c.user_id))];
-      
-      const [profilesRes, rolesRes, donorsRes] = await Promise.all([
-        supabase.from('profiles').select('*').in('id', userIds),
-        supabase.from('user_roles').select('user_id, role').in('user_id', userIds),
-        supabase.from('user_donors').select('user_id, tier, nickname_color').in('user_id', userIds),
-      ]);
-      
-      const profileMap = new Map((profilesRes.data || []).map(p => [p.id, p]));
-      const roleMap = new Map<string, AppRole>();
-      (rolesRes.data || []).forEach(r => {
-        const current = roleMap.get(r.user_id);
-        const priority: Record<string, number> = { admin: 5, moderator: 4, curator: 3, developer: 2, player: 1, user: 0 };
-        if (!current || priority[r.role] > priority[current]) {
-          roleMap.set(r.user_id, r.role as AppRole);
-        }
-      });
-      const donorMap = new Map((donorsRes.data || []).map(d => [d.user_id, d]));
-      
-      return (data || []).map(comment => ({
-        ...comment,
-        profiles: profileMap.get(comment.user_id) || null,
-        user_role: roleMap.get(comment.user_id) || 'user',
-        donor_tier: (donorMap.get(comment.user_id)?.tier as DonorTier) || 'none',
-        nickname_color: donorMap.get(comment.user_id)?.nickname_color || null,
-      })) as ExtendedComment[];
-    },
-    enabled: !!project?.id,
-  });
-
   const requireAuth = (action: string) => {
     if (!user) {
       setAuthAction(action);
@@ -270,17 +221,6 @@ export default function Project() {
     },
   });
 
-  const deleteCommentMutation = useMutation({
-    mutationFn: async (commentId: string) => {
-      const { error } = await supabase.from('comments').delete().eq('id', commentId);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['comments', project?.id] });
-      toast({ title: 'Комментарий удален' });
-    },
-  });
-
   const deleteProjectMutation = useMutation({
     mutationFn: async () => {
       if (!project?.id) throw new Error('No project');
@@ -300,24 +240,6 @@ export default function Project() {
     onSuccess: () => {
       toast({ title: 'Проект удален' });
       navigate('/browse');
-    },
-  });
-
-  const [commentText, setCommentText] = useState('');
-  const commentMutation = useMutation({
-    mutationFn: async () => {
-      if (!project?.id || !user?.id || !commentText.trim()) throw new Error('Invalid');
-      const { error } = await supabase.from('comments').insert({
-        project_id: project.id,
-        user_id: user.id,
-        content: commentText.trim(),
-      });
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['comments', project?.id] });
-      setCommentText('');
-      toast({ title: 'Комментарий добавлен!' });
     },
   });
 
@@ -370,29 +292,6 @@ export default function Project() {
   const handleFavorite = () => {
     if (!requireAuth('добавить в избранное')) return;
     favoriteMutation.mutate();
-  };
-
-  const handleComment = async () => {
-    if (!requireAuth('оставить комментарий')) return;
-    if (!commentText.trim()) return;
-    
-    if (!accessInfo?.canInteract) {
-      toast({
-        title: 'Нет доступа',
-        description: 'У вас нет доступа для комментирования этого проекта',
-        variant: 'destructive',
-      });
-      return;
-    }
-    
-    const allowed = await checkRateLimit({
-      actionType: 'comment',
-      maxRequests: 10,
-      windowSeconds: 60,
-    });
-    if (!allowed) return;
-    
-    commentMutation.mutate();
   };
 
   // Purchase request mutation
@@ -555,70 +454,18 @@ export default function Project() {
                     </Card>
                   )}
                 </TabsContent>
-                <TabsContent value="versions" className="mt-4 space-y-4">
-                  {versions.map(v => (
-                    <Card key={v.id} className="bg-card border-border"><CardContent className="pt-6 flex justify-between items-start">
-                      <div><h3 className="font-semibold">v{v.version_number}</h3><p className="text-sm text-muted-foreground">{formatDate(v.created_at)}</p></div>
-                      <Button size="sm" onClick={() => handleDownload(v.file_url)}><Download className="w-4 h-4 mr-1" />Скачать</Button>
-                    </CardContent></Card>
-                  ))}
+                <TabsContent value="versions" className="mt-4">
+                  <VersionTimeline 
+                    versions={versions}
+                    onDownload={handleDownload}
+                    canDownload={accessInfo?.canDownload || false}
+                  />
                 </TabsContent>
-                <TabsContent value="comments" className="mt-4 space-y-4">
-                  <Card className="bg-card border-border">
-                    <CardContent className="pt-6">
-                      <Textarea 
-                        placeholder={user ? "Комментарий..." : "Войдите чтобы оставить комментарий"} 
-                        value={commentText} 
-                        onChange={e => setCommentText(e.target.value)} 
-                        className="mb-3" 
-                        disabled={!user}
-                      />
-                      <Button onClick={handleComment} disabled={!commentText.trim()}>
-                        <Send className="w-4 h-4 mr-1" />Отправить
-                      </Button>
-                    </CardContent>
-                  </Card>
-                  {comments.map(c => (
-                    <Card key={c.id} className="bg-card border-border">
-                      <CardContent className="pt-6">
-                        <div className="flex items-start gap-3">
-                          <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center">
-                            <User className="w-5 h-5" />
-                          </div>
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2">
-                              <UserNickname 
-                                username={c.profiles?.username || 'Unknown'} 
-                                userId={c.user_id}
-                                role={c.user_role}
-                                donorTier={c.donor_tier}
-                                customColor={c.nickname_color}
-                                profilePrimaryColor={c.profiles?.profile_primary_color}
-                                profileAccentColor={c.profiles?.profile_accent_color}
-                                profileEmoji={c.profiles?.profile_emoji}
-                              />
-                              {c.donor_tier && c.donor_tier !== 'none' && (
-                                <DonorBadge tier={c.donor_tier} size="sm" />
-                              )}
-                              <span className="text-xs text-muted-foreground">
-                                {formatDate(c.created_at)}
-                              </span>
-                            </div>
-                            <p className="mt-1">{c.content}</p>
-                          </div>
-                          {(canModerate || c.user_id === user?.id) && (
-                            <Button 
-                              variant="ghost" 
-                              size="icon"
-                              onClick={() => deleteCommentMutation.mutate(c.id)}
-                            >
-                              <Trash2 className="w-4 h-4 text-destructive" />
-                            </Button>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                <TabsContent value="comments" className="mt-4">
+                  <CommentSection 
+                    projectId={project.id}
+                    canInteract={accessInfo?.canInteract || false}
+                  />
                 </TabsContent>
               </Tabs>
             </div>
