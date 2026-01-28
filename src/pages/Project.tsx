@@ -20,6 +20,8 @@ import { useDownloadAccess } from '@/hooks/useDownloadAccess';
 import { ReportDialog } from '@/components/ReportDialog';
 import { CommentSection } from '@/components/comments/CommentSection';
 import { VersionTimeline } from '@/components/projects/VersionTimeline';
+import { ProjectSubscribeButton } from '@/components/projects/ProjectSubscribeButton';
+import { AuthorSubscribeButton } from '@/components/AuthorSubscribeButton';
 import { 
   Download, Star, Eye, Calendar, User, Heart, HeartOff, Crown,
   MessageSquare, History, ArrowLeft, Trash2, LogIn, Flag,
@@ -375,6 +377,11 @@ export default function Project() {
                       {authorInfo?.donorTier && authorInfo.donorTier !== 'none' && (
                         <DonorBadge tier={authorInfo.donorTier} size="sm" />
                       )}
+                      <AuthorSubscribeButton 
+                        authorId={project.author_id} 
+                        authorName={project.profiles?.username}
+                        variant="small"
+                      />
                     </span>
                     <span className="flex items-center gap-1 text-muted-foreground"><Calendar className="w-4 h-4" />{formatDate(project.created_at)}</span>
                   </div>
@@ -384,7 +391,9 @@ export default function Project() {
                     <span><Star className="w-4 h-4 inline mr-1 fill-minecraft-gold text-minecraft-gold" />{rating.toFixed(1)}</span>
                   </div>
                   
+                  {/* Subscribe to project updates */}
                   <div className="flex items-center gap-2 flex-wrap">
+                    <ProjectSubscribeButton projectId={project.id} />
                     {canModerate && (
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
