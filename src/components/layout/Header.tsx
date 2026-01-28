@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/lib/auth';
@@ -24,9 +24,7 @@ import {
   LifeBuoy,
   ChevronDown,
   Sparkles,
-  FileText,
   Ticket,
-  Wrench,
   TrendingUp,
   Download,
 } from 'lucide-react';
@@ -93,6 +91,7 @@ interface HeaderProps {
 export function Header({ snowflakesEnabled = true, onToggleSnowflakes }: HeaderProps) {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -135,6 +134,36 @@ export function Header({ snowflakesEnabled = true, onToggleSnowflakes }: HeaderP
     }
   };
 
+  // Check if a nav item is active
+  const isNavActive = (href: string, children?: { href: string }[]) => {
+    const pathname = location.pathname;
+    const search = location.search;
+    const fullPath = pathname + search;
+    
+    // For items with children, check if any child matches
+    if (children) {
+      return children.some(child => {
+        if (child.href.includes('?')) {
+          return fullPath.startsWith(child.href.split('?')[0]) && fullPath.includes(child.href.split('?')[1]?.split('=')[1] || '');
+        }
+        return pathname.startsWith(child.href);
+      });
+    }
+    
+    // Exact match for simple paths
+    if (href === '/chat') return pathname === '/chat' || pathname.startsWith('/chat/');
+    if (href === '/forum') return pathname === '/forum' || pathname.startsWith('/forum/');
+    if (href === '/support') return pathname === '/support';
+    if (href === '/leaderboards') return pathname === '/leaderboards';
+    
+    // For browse with query params
+    if (href.includes('?')) {
+      return fullPath.includes(href);
+    }
+    
+    return pathname === href;
+  };
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/50 glass-card">
       <div className="container flex h-14 sm:h-16 items-center justify-between px-3 sm:px-4">
@@ -148,27 +177,42 @@ export function Header({ snowflakesEnabled = true, onToggleSnowflakes }: HeaderP
           </span>
         </Link>
 
-        {/* Desktop Navigation - like reference image */}
+        {/* Desktop Navigation - with active state highlighting */}
         <nav className="hidden lg:flex items-center gap-1">
-          {navItems.map((item) => (
-            item.children ? (
+          {navItems.map((item) => {
+            const isActive = isNavActive(item.href || '', item.children);
+            
+            return item.children ? (
               <DropdownMenu key={item.name}>
                 <DropdownMenuTrigger asChild>
                   <Button 
                     variant="ghost" 
-                    className="text-xs font-medium text-muted-foreground hover:text-foreground gap-1 px-3 h-8"
+                    className={cn(
+                      "text-xs font-medium gap-1 px-3 h-8 transition-colors",
+                      isActive 
+                        ? "text-minecraft-green bg-minecraft-green/10 border border-minecraft-green/30" 
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
                   >
                     {item.name}
                     <ChevronDown className="w-3 h-3" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-48">
-                  {item.children.map((child) => (
-                    <DropdownMenuItem key={child.name} onClick={() => navigate(child.href)}>
-                      <child.icon className="w-4 h-4 mr-2" />
-                      {child.name}
-                    </DropdownMenuItem>
-                  ))}
+                  {item.children.map((child) => {
+                    const childActive = location.pathname + location.search === child.href || 
+                      (child.href.includes('?type=') && location.search.includes(child.href.split('?type=')[1]));
+                    return (
+                      <DropdownMenuItem 
+                        key={child.name} 
+                        onClick={() => navigate(child.href)}
+                        className={cn(childActive && "bg-minecraft-green/10 text-minecraft-green")}
+                      >
+                        <child.icon className="w-4 h-4 mr-2" />
+                        {child.name}
+                      </DropdownMenuItem>
+                    );
+                  })}
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
@@ -177,15 +221,17 @@ export function Header({ snowflakesEnabled = true, onToggleSnowflakes }: HeaderP
                 to={item.href!}
                 className={cn(
                   "text-xs font-medium px-3 py-2 rounded transition-colors",
-                  item.highlight 
-                    ? "text-primary hover:text-primary/80" 
-                    : "text-muted-foreground hover:text-foreground"
+                  isActive
+                    ? "text-minecraft-green bg-minecraft-green/10 border border-minecraft-green/30"
+                    : item.highlight 
+                      ? "text-primary hover:text-primary/80" 
+                      : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 {item.name}
               </Link>
-            )
-          ))}
+            );
+          })}
         </nav>
 
         {/* Search */}
@@ -270,6 +316,10 @@ export function Header({ snowflakesEnabled = true, onToggleSnowflakes }: HeaderP
                   <DropdownMenuItem onClick={() => navigate('/profile')}>
                     <User className="w-4 h-4 mr-2" />
                     Профиль
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/dashboard')}>
+                    <TrendingUp className="w-4 h-4 mr-2" />
+                    Дашборд автора
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate('/my-projects')}>
                     <Blocks className="w-4 h-4 mr-2" />
@@ -385,38 +435,51 @@ export function Header({ snowflakesEnabled = true, onToggleSnowflakes }: HeaderP
           <div className="space-y-2">
             <p className="text-xs font-medium text-muted-foreground px-1">РЕСУРСЫ</p>
             <nav className="grid grid-cols-2 gap-2">
-              {navItems[0].children?.map((item) => (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  className="flex items-center gap-2 p-2.5 rounded-lg text-sm text-muted-foreground hover:text-foreground bg-secondary/50 hover:bg-secondary transition-colors"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  <item.icon className="w-4 h-4" />
-                  {item.name}
-                </Link>
-              ))}
+              {navItems[0].children?.map((item) => {
+                const isActive = location.pathname === '/browse' && location.search.includes(`type=${item.href.split('type=')[1]}`);
+                return (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    className={cn(
+                      "flex items-center gap-2 p-2.5 rounded-lg text-sm transition-colors",
+                      isActive
+                        ? "text-minecraft-green bg-minecraft-green/10 border border-minecraft-green/30"
+                        : "text-muted-foreground hover:text-foreground bg-secondary/50 hover:bg-secondary"
+                    )}
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <item.icon className="w-4 h-4" />
+                    {item.name}
+                  </Link>
+                );
+              })}
             </nav>
           </div>
           
           {/* Other links */}
           <div className="grid grid-cols-2 gap-2">
-            {navItems.slice(1).map((item) => (
-              <Link
-                key={item.name}
-                to={item.href!}
-                className={cn(
-                  "flex items-center gap-2 p-2.5 rounded-lg text-sm transition-colors",
-                  item.highlight 
-                    ? "text-primary bg-primary/10 hover:bg-primary/20 border border-primary/30"
-                    : "text-muted-foreground hover:text-foreground bg-secondary/50 hover:bg-secondary"
-                )}
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                <item.icon className="w-4 h-4" />
-                {item.name}
-              </Link>
-            ))}
+            {navItems.slice(1).map((item) => {
+              const isActive = isNavActive(item.href || '', item.children);
+              return (
+                <Link
+                  key={item.name}
+                  to={item.href!}
+                  className={cn(
+                    "flex items-center gap-2 p-2.5 rounded-lg text-sm transition-colors",
+                    isActive
+                      ? "text-minecraft-green bg-minecraft-green/10 border border-minecraft-green/30"
+                      : item.highlight 
+                        ? "text-primary bg-primary/10 hover:bg-primary/20 border border-primary/30"
+                        : "text-muted-foreground hover:text-foreground bg-secondary/50 hover:bg-secondary"
+                  )}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <item.icon className="w-4 h-4" />
+                  {item.name}
+                </Link>
+              );
+            })}
           </div>
           
           {/* Mobile donate button */}

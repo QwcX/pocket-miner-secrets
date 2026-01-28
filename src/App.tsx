@@ -32,6 +32,7 @@ import About from "./pages/About";
 import FAQ from "./pages/FAQ";
 import Rules from "./pages/Rules";
 import Contact from "./pages/Contact";
+import Dashboard from "./pages/Dashboard";
 
 const queryClient = new QueryClient();
 
@@ -71,6 +72,7 @@ const App = () => (
                 <Route path="/faq" element={<FAQ />} />
                 <Route path="/rules" element={<Rules />} />
                 <Route path="/contact" element={<Contact />} />
+                <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
