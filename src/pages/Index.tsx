@@ -80,10 +80,10 @@ const Index = () => {
   return (
     <>
       <Helmet>
-        <title>TestLeak - Minecraft Сборки, Плагины, Моды, Карты</title>
+        <title>NeuroLeak - Minecraft Сборки, Плагины, Моды, Карты</title>
         <meta 
           name="description" 
-          content="TestLeak - крупнейшая платформа для обмена Minecraft контентом. Скачивайте сборки, плагины, моды, карты и ресурспаки бесплатно." 
+          content="NeuroLeak - крупнейшая платформа для обмена Minecraft контентом. Скачивайте сборки, плагины, моды, карты и ресурспаки бесплатно." 
         />
       </Helmet>
 
@@ -102,7 +102,7 @@ const Index = () => {
               </Badge>
               
               <h1 className="font-display text-xl xs:text-2xl sm:text-3xl md:text-4xl text-foreground leading-relaxed">
-                <span className="text-gradient">TESTLEAK</span>
+                <span className="text-gradient">NEUROLEAK</span>
               </h1>
               
               <p className="text-sm sm:text-base md:text-lg text-muted-foreground max-w-2xl mx-auto px-2">

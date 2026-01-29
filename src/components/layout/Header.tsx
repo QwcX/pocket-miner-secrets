@@ -173,7 +173,7 @@ export function Header({ snowflakesEnabled = true, onToggleSnowflakes }: HeaderP
             <Blocks className="w-4 h-4 sm:w-5 sm:h-5 text-primary-foreground" />
           </div>
           <span className="font-display text-[10px] sm:text-xs md:text-sm text-primary">
-            TestLeak
+            NeuroLeak
           </span>
         </Link>
 

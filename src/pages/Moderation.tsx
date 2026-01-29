@@ -299,7 +299,7 @@ export default function Moderation() {
   return (
     <>
       <Helmet>
-        <title>Модерация | MCLeak</title>
+        <title>Модерация | NeuroLeak</title>
       </Helmet>
 
       <Layout>

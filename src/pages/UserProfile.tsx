@@ -367,7 +367,7 @@ export default function UserProfile() {
   return (
     <>
       <Helmet>
-        <title>{profile.username} | TestLeak</title>
+        <title>{profile.username} | NeuroLeak</title>
       </Helmet>
 
       <Layout>

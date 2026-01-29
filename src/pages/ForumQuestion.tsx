@@ -289,7 +289,7 @@ export default function ForumQuestionPage() {
   return (
     <>
       <Helmet>
-        <title>{question.title} | Форум помощи | TestLeak</title>
+        <title>{question.title} | Форум помощи | NeuroLeak</title>
       </Helmet>
       
       <Layout>

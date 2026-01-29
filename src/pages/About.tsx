@@ -40,8 +40,8 @@ export default function About() {
   return (
     <>
       <Helmet>
-        <title>О проекте | TestLeak</title>
-        <meta name="description" content="TestLeak - крупнейшая платформа для обмена Minecraft контентом. Узнайте больше о нашем проекте." />
+        <title>О проекте | NeuroLeak</title>
+        <meta name="description" content="NeuroLeak - крупнейшая платформа для обмена Minecraft контентом. Узнайте больше о нашем проекте." />
       </Helmet>
       
       <Layout>
@@ -53,7 +53,7 @@ export default function About() {
               О проекте
             </Badge>
             <h1 className="text-3xl md:text-4xl font-display text-foreground mb-4">
-              Добро пожаловать в <span className="text-gradient">TestLeak</span>
+              Добро пожаловать в <span className="text-gradient">NeuroLeak</span>
             </h1>
             <p className="text-lg text-muted-foreground">
               Мы создаем лучшую платформу для обмена Minecraft контентом в русскоязычном сообществе
@@ -81,7 +81,7 @@ export default function About() {
             </CardHeader>
             <CardContent className="text-muted-foreground space-y-4">
               <p>
-                TestLeak создан для того, чтобы объединить создателей и игроков Minecraft. 
+                NeuroLeak создан для того, чтобы объединить создателей и игроков Minecraft.
                 Мы предоставляем удобную платформу для публикации и скачивания сборок, 
                 плагинов, модов, карт и ресурспаков.
               </p>
@@ -96,7 +96,7 @@ export default function About() {
           {/* Features */}
           <div className="mb-12">
             <h2 className="text-2xl font-semibold text-foreground text-center mb-8">
-              Почему TestLeak?
+              Почему NeuroLeak?
             </h2>
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {features.map((feature) => (

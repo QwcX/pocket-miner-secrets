@@ -253,7 +253,7 @@ export default function Upload() {
   return (
     <>
       <Helmet>
-        <title>Загрузить проект | TestLeak</title>
+        <title>Загрузить проект | NeuroLeak</title>
       </Helmet>
 
       <Layout>

@@ -198,7 +198,7 @@ export default function Leaderboards() {
   return (
     <>
       <Helmet>
-        <title>Топы | MCLeak</title>
+        <title>Топы | NeuroLeak</title>
         <meta name="description" content="Топ игроков и популярных сборок Minecraft" />
       </Helmet>
 

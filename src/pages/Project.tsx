@@ -339,7 +339,7 @@ export default function Project() {
 
   return (
     <>
-      <Helmet><title>{project.title} | TestLeak</title></Helmet>
+      <Helmet><title>{project.title} | NeuroLeak</title></Helmet>
       <Layout>
         <div className="container py-8">
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">

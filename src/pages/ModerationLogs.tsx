@@ -114,7 +114,7 @@ export default function ModerationLogs() {
   return (
     <>
       <Helmet>
-        <title>Логи модерации | MCLeak</title>
+        <title>Логи модерации | NeuroLeak</title>
       </Helmet>
 
       <Layout>

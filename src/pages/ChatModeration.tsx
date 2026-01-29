@@ -184,7 +184,7 @@ export default function ChatModeration() {
   return (
     <>
       <Helmet>
-        <title>Модерация чата | TestLeak</title>
+        <title>Модерация чата | NeuroLeak</title>
       </Helmet>
       <Layout>
         <div className="container py-6">

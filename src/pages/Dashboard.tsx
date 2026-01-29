@@ -136,7 +136,7 @@ export default function Dashboard() {
   return (
     <>
       <Helmet>
-        <title>Дашборд автора | TestLeak</title>
+        <title>Дашборд автора | NeuroLeak</title>
       </Helmet>
       
       <Layout>

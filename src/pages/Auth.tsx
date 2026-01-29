@@ -169,7 +169,7 @@ export default function Auth() {
         } else {
           toast({
             title: 'Успешная регистрация!',
-            description: 'Добро пожаловать в MCLeak',
+            description: 'Добро пожаловать в NeuroLeak',
           });
           navigate('/');
         }
@@ -262,7 +262,7 @@ export default function Auth() {
   return (
     <>
       <Helmet>
-        <title>{mode === 'login' ? 'Вход' : 'Регистрация'} | TestLeak</title>
+        <title>{mode === 'login' ? 'Вход' : 'Регистрация'} | NeuroLeak</title>
       </Helmet>
 
       <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-background">
@@ -272,7 +272,7 @@ export default function Auth() {
           <div className="w-10 h-10 bg-primary rounded flex items-center justify-center">
             <Blocks className="w-6 h-6 text-primary-foreground" />
           </div>
-          <span className="font-display text-sm text-primary">TestLeak</span>
+          <span className="font-display text-sm text-primary">NeuroLeak</span>
         </Link>
 
         <Card className="relative w-full max-w-md bg-card border-border">
