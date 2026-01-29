@@ -147,7 +147,7 @@ export default function Forum() {
   return (
     <>
       <Helmet>
-        <title>Форум помощи | TestLeak</title>
+        <title>Форум помощи | NeuroLeak</title>
         <meta name="description" content="Задавайте вопросы и помогайте другим игрокам с проблемами в Minecraft" />
       </Helmet>
       

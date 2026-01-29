@@ -388,7 +388,7 @@ export default function OrderChat() {
   return (
     <>
       <Helmet>
-        <title>Заказ #{orderNumber} | TestLeak</title>
+        <title>Заказ #{orderNumber} | NeuroLeak</title>
       </Helmet>
       <Layout>
         <div className="container py-6">

@@ -40,8 +40,8 @@ const contacts = [
   {
     icon: Mail,
     title: 'Email',
-    description: 'support@testleak.com',
-    link: 'mailto:support@testleak.com',
+    description: 'support@neuroleak.com',
+    link: 'mailto:support@neuroleak.com',
     linkText: 'Написать письмо',
   },
 ];
@@ -87,8 +87,8 @@ export default function Contact() {
   return (
     <>
       <Helmet>
-        <title>Контакты | TestLeak</title>
-        <meta name="description" content="Свяжитесь с командой TestLeak. Discord, Telegram, Email и форма обратной связи." />
+        <title>Контакты | NeuroLeak</title>
+        <meta name="description" content="Свяжитесь с командой NeuroLeak. Discord, Telegram, Email и форма обратной связи." />
       </Helmet>
       
       <Layout>

@@ -12,7 +12,7 @@ export function Footer() {
               <div className="w-7 h-7 sm:w-8 sm:h-8 bg-primary rounded flex items-center justify-center">
                 <Blocks className="w-4 h-4 sm:w-5 sm:h-5 text-primary-foreground" />
               </div>
-              <span className="font-display text-[10px] sm:text-xs text-primary">TestLeak</span>
+              <span className="font-display text-[10px] sm:text-xs text-primary">NeuroLeak</span>
             </Link>
             <p className="text-xs sm:text-sm text-muted-foreground">
               Крупнейшая платформа для обмена Minecraft контентом. 
@@ -96,7 +96,7 @@ export function Footer() {
 
         <div className="mt-6 sm:mt-8 pt-6 sm:pt-8 border-t border-border">
           <p className="text-center text-xs sm:text-sm text-muted-foreground">
-            © {new Date().getFullYear()} TestLeak. Все права защищены.
+            © {new Date().getFullYear()} NeuroLeak. Все права защищены.
           </p>
         </div>
       </div>

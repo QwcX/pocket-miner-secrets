@@ -337,7 +337,7 @@ export default function Admin() {
   return (
     <>
       <Helmet>
-        <title>Админ-панель | TestLeak</title>
+        <title>Админ-панель | NeuroLeak</title>
       </Helmet>
 
       <Layout>

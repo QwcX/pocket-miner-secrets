@@ -312,7 +312,7 @@ export default function Messages() {
   return (
     <>
       <Helmet>
-        <title>Сообщения | TestLeak</title>
+        <title>Сообщения | NeuroLeak</title>
       </Helmet>
       <Layout>
         <div className="container py-8">

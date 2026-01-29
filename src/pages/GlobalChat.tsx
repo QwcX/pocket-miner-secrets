@@ -329,14 +329,14 @@ export default function GlobalChat() {
   return (
     <>
       <Helmet>
-        <title>БлэкЧат | TestLeak</title>
+        <title>БлэкЧат | NeuroLeak</title>
       </Helmet>
       <Layout>
         <div className="container py-6">
           {/* Header like reference */}
           <div className="mb-6 border-b border-border pb-4">
             <h1 className="text-2xl font-bold text-foreground">
-              TestLeak.com — лучшее для сервера Майнкрафт!
+              NeuroLeak.com — лучшее для сервера Майнкрафт!
             </h1>
           </div>
 

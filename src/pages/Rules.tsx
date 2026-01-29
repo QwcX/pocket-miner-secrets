@@ -59,8 +59,8 @@ export default function Rules() {
   return (
     <>
       <Helmet>
-        <title>Правила сообщества | TestLeak</title>
-        <meta name="description" content="Правила использования платформы TestLeak. Ознакомьтесь с правилами загрузки контента и общения." />
+        <title>Правила сообщества | NeuroLeak</title>
+        <meta name="description" content="Правила использования платформы NeuroLeak. Ознакомьтесь с правилами загрузки контента и общения." />
       </Helmet>
       
       <Layout>

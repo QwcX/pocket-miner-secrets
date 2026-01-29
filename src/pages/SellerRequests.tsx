@@ -212,7 +212,7 @@ export default function SellerRequests() {
   return (
     <>
       <Helmet>
-        <title>Заявки на покупку | TestLeak</title>
+        <title>Заявки на покупку | NeuroLeak</title>
       </Helmet>
       <Layout>
         <div className="container py-8">

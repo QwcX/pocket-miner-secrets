@@ -106,8 +106,8 @@ export default function FAQ() {
   return (
     <>
       <Helmet>
-        <title>FAQ - Часто задаваемые вопросы | TestLeak</title>
-        <meta name="description" content="Ответы на часто задаваемые вопросы о TestLeak. Скачивание, загрузка контента, донат и многое другое." />
+        <title>FAQ - Часто задаваемые вопросы | NeuroLeak</title>
+        <meta name="description" content="Ответы на часто задаваемые вопросы о NeuroLeak. Скачивание, загрузка контента, донат и многое другое." />
       </Helmet>
       
       <Layout>

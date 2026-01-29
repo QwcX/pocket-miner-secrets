@@ -2,6 +2,7 @@ import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Helmet } from 'react-helmet-async';
 import { 
   Crown, 
   Diamond, 
@@ -179,6 +180,11 @@ function TierCard({ tier, benefits, index }: { tier: DonorTier; benefits: DonorB
 
 export default function Donate() {
   return (
+    <>
+    <Helmet>
+      <title>Донат | NeuroLeak</title>
+      <meta name="description" content="Поддержите NeuroLeak и получите эксклюзивные привилегии" />
+    </Helmet>
     <Layout>
       <div className="container py-12">
         {/* Hero Section */}
@@ -305,5 +311,6 @@ export default function Donate() {
         </div>
       </div>
     </Layout>
+    </>
   );
 }

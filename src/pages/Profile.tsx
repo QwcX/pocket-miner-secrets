@@ -239,7 +239,7 @@ export default function Profile() {
   return (
     <>
       <Helmet>
-        <title>Профиль | TestLeak</title>
+        <title>Профиль | NeuroLeak</title>
       </Helmet>
 
       <Layout>

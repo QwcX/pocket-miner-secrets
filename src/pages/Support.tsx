@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -187,6 +188,10 @@ export default function Support() {
   if (!user) return <Layout><div className="container py-8 text-center"><p>Войдите для доступа</p><Button onClick={() => navigate('/auth')} className="mt-4">Войти</Button></div></Layout>;
 
   return (
+    <>
+    <Helmet>
+      <title>Техподдержка | NeuroLeak</title>
+    </Helmet>
     <Layout>
       <div className="container py-8">
         <div className="flex items-center justify-between mb-6">
@@ -275,5 +280,6 @@ export default function Support() {
         </div>
       </div>
     </Layout>
+    </>
   );
 }

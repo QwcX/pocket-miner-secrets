@@ -153,7 +153,7 @@ export default function Browse() {
     <>
       <Helmet>
         <title>
-          {filters.type ? CONTENT_TYPE_LABELS[filters.type] : 'Каталог'} | TestLeak
+          {filters.type ? CONTENT_TYPE_LABELS[filters.type] : 'Каталог'} | NeuroLeak
         </title>
         <meta 
           name="description" 
